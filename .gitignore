@@ -1,0 +1,6 @@
+# exclude .class files
+
+*.class
+.classpath
+.project
+
