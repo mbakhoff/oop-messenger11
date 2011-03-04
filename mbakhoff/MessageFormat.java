@@ -16,15 +16,17 @@ public class MessageFormat {
 		return ByteBuffer.allocate(4).put(b).getInt(0);
 	}
 	
-	protected static byte[] readBytes(InputStream in, int len, long timeout) throws Exception {
-		byte[] data = new byte[len];
+	protected static int readBytes(InputStream in, 
+			byte[] buf, int len, long timeout) throws Exception {
+		if (buf == null)
+			throw new Exception("MessageFormat.readBytes: unallocated buf");
 		int read = 0;
 		long start = System.currentTimeMillis();
 		while (System.currentTimeMillis() - start < timeout && read != len) {
-			read += in.read(data, read, len-read);
+			read += in.read(buf, read, len-read);
 			Thread.sleep(25);
 		}
-		return read==len ? data : null;
+		return read;
 	}
 	
 	public static byte[] createMessagePacket(String nick, String msg) {
@@ -58,16 +60,16 @@ public class MessageFormat {
 			switch (type) {
 			case MessageFormat.PKT_MESSAGE: {
 					if(!dissectStreamMessage(soc, mgr)) {
-						System.out.println("MessageFormat: "+
-								soc.getInetAddress().getHostAddress()+": "+
-								"socket out of sync or timed out, killing socket");
+						System.out.println("MessageFormat: killing socket "+
+								soc.getRemoteSocketAddress());
 						soc.close();
 					} 
 					break;
 				}
 			default: {
 					System.out.println("MessageFormat:dissectStream: "+
-							"EOF or invalid type byte");
+							"EOF or invalid type byte: "+type+"; killing "+
+							"socket "+soc.getRemoteSocketAddress());
 					soc.close();
 				}
 			}
@@ -78,7 +80,8 @@ public class MessageFormat {
 	}
 	
 	@SuppressWarnings("unused") // eclipse is dumb
-	protected static boolean dissectStreamMessage(Socket soc, ConnectionManager mgr) {
+	protected static boolean dissectStreamMessage(
+			Socket soc, ConnectionManager mgr) {
 		InputStream in = null;
 		try {
 			in = soc.getInputStream();
@@ -89,12 +92,13 @@ public class MessageFormat {
 		byte[] nick = null, msg = null;
 		int nickBytes = -1;
 		int msgBytes = -1;
+		int r = 0;
 		// read nick length
 		try {
-			intBuf = readBytes(in, 4, 300);
-			if (intBuf == null) {
+			r = readBytes(in, intBuf, 4, 300);
+			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-						"could not read nick length: timeout");
+						"could not read nick length: timeout (read "+r+"/4)");
 				return false;
 			}
 		} catch (Exception e) {
@@ -103,12 +107,13 @@ public class MessageFormat {
 			return false;
 		}
 		nickBytes = bytesToInt(intBuf);
+		nick = new byte[nickBytes];
 		// read nick
 		try {
-			nick = readBytes(in, nickBytes, 1000);
-			if (intBuf == null) {
+			r = readBytes(in, nick, nickBytes, 1000);
+			if (r < nickBytes) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read nick: timeout");
+					"could not read nick: timeout (read "+r+"/"+nickBytes+")");
 				return false;
 			}
 		} catch (Exception e) {
@@ -118,10 +123,10 @@ public class MessageFormat {
 		}
 		// read msg length
 		try {
-			intBuf = readBytes(in, 4, 300);
-			if (intBuf == null) {
+			r = readBytes(in, intBuf, 4, 300);
+			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read msg length: timeout");
+					"could not read msg length: timeout (read "+r+"/4)");
 				return false;
 			}
 		} catch (Exception e) {
@@ -130,12 +135,13 @@ public class MessageFormat {
 			return false;
 		}
 		msgBytes = bytesToInt(intBuf);
+		msg = new byte[msgBytes];
 		// read msg
 		try {
-			msg = readBytes(in, msgBytes, 1000);
+			r = readBytes(in, msg, msgBytes, 1000);
 			if (intBuf == null) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read msg: timeout");
+					"could not read msg: timeout (read "+r+"/"+msgBytes+")");
 				return false;
 			}
 		} catch (Exception e) { 
@@ -145,10 +151,10 @@ public class MessageFormat {
 		}
 		// read end0
 		try {
-			intBuf = readBytes(in, 3, 300);
-			if (intBuf == null) {
+			r = readBytes(in, intBuf, 3, 300);
+			if (r < 3) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read end0: timeout");
+					"could not read end0: timeout (read "+r+"/3)");
 				return false;
 			}
 		} catch (Exception e) {
@@ -164,8 +170,10 @@ public class MessageFormat {
 			mgr.messageReceived(new String(nick), new String(msg));
 			return true;
 		} else {
-			System.out.println("MessageFormat:dissectStreamMessage: "+
-					"end0 missing. stream out of sync? ");
+			System.out.println(
+					String.format("MessageFormat:dissectStreamMessage: "+
+							"end0 missing (%x,%x,%x). stream out of sync? ", 
+							intBuf[0], intBuf[1], intBuf[2]));
 			return false;
 		}
 	}

@@ -18,10 +18,12 @@ public class ConnectionManager {
 	public ConnectionManager() {
 		server = new Server();
 		nickMappings = new HashMap<String, String>();
+		/*
 		sendToIP("127.0.0.1", 
 				MessageFormat.createMessagePacket("me", "hello world"));
 		sendToIP("localhost", 
 				MessageFormat.createMessagePacket("me", "hello world2"));
+		*/
 		while (true) {
 			try {
 				server.readSockets(this);
@@ -64,12 +66,13 @@ public class ConnectionManager {
 				soc.getOutputStream().write(pkt);
 				return true;
 			} catch (Exception e) {
-				System.out.println("failed to send packet to "+addr+": "+
+				System.out.println("ERROR: failed to send to "+addr+": "+
 						e.getMessage());
 				return false;
 			}
+		} else {
+			return false;
 		}
-		return false;
 	}
 	
 	/**
@@ -90,6 +93,7 @@ public class ConnectionManager {
 	}
 	
 	// TODO: collisions?
+	// TODO: clear closed connections
 	/**
 	 * @brief Bind ip-address to nickname
 	 * @param nick nickname to bind
@@ -98,6 +102,8 @@ public class ConnectionManager {
 	public void mapNick(String nick, String ip) {
 		String current = nickMappings.get(nick);
 		if (current == null) {
+			System.out.println("ConnectionManager: "+
+					"mapNick "+nick+":"+ip);
 			nickMappings.put(nick, ip);
 		} else if (!current.equals(ip)) {
 			System.out.println("ConnectionManager: "+
