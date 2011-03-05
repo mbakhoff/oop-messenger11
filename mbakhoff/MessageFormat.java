@@ -94,14 +94,15 @@ public class MessageFormat {
 	{
 		System.out.println("DEBUG: MessageFormat: dissecting new message "+
 				"from "+soc.getRemoteSocketAddress());
-		byte[] lenBuf = new byte[4];
-		byte[] nickBytes = null, msgBytes = null;
+		byte[] buf = new byte[4];
+		byte[] nickBytes = null;
+		byte[] msgBytes = null;
 		int nickLength = -1;
 		int msgLength = -1;
 		int r = 0;
 		// read nick length
 		try {
-			r = readBytes(in, lenBuf, 4, 300);
+			r = readBytes(in, buf, 4, 300);
 			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 						"could not read nick length: timeout (read "+r+"/4)");
@@ -112,7 +113,7 @@ public class MessageFormat {
 					"could not read nick length: exception: "+e.getMessage());
 			return false;
 		}
-		nickLength = bytesToInt(lenBuf);
+		nickLength = bytesToInt(buf);
 		nickBytes = new byte[nickLength];
 		// read nick
 		try {
@@ -129,7 +130,7 @@ public class MessageFormat {
 		}
 		// read msg length
 		try {
-			r = readBytes(in, lenBuf, 4, 300);
+			r = readBytes(in, buf, 4, 300);
 			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 					"could not read msg length: timeout (read "+r+"/4)");
@@ -140,12 +141,12 @@ public class MessageFormat {
 				"could not read msg length: exception: "+e.getMessage());
 			return false;
 		}
-		msgLength = bytesToInt(lenBuf);
+		msgLength = bytesToInt(buf);
 		msgBytes = new byte[msgLength];
 		// read msg
 		try {
 			r = readBytes(in, msgBytes, msgLength, 1000);
-			if (lenBuf == null) {
+			if (buf == null) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 					"could not read msg: timeout (read "+r+"/"+msgLength+")");
 				return false;
@@ -157,7 +158,7 @@ public class MessageFormat {
 		}
 		// read end0
 		try {
-			r = readBytes(in, lenBuf, 3, 300);
+			r = readBytes(in, buf, 3, 300);
 			if (r < 3) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 					"could not read end0: timeout (read "+r+"/3)");
@@ -169,7 +170,7 @@ public class MessageFormat {
 			return false;
 		}
 		// check for end0
-		if (lenBuf[0]==0 && lenBuf[1]==0 && lenBuf[2]==0) {
+		if (buf[0]==0 && buf[1]==0 && buf[2]==0) {
 			String nick = null;
 			String msg = null;
 			try {
@@ -188,7 +189,7 @@ public class MessageFormat {
 			System.out.println(
 					String.format("MessageFormat:dissectStreamMessage: "+
 							"end0 missing (%x,%x,%x). stream out of sync? ", 
-							lenBuf[0], lenBuf[1], lenBuf[2]));
+							buf[0], buf[1], buf[2]));
 			return false;
 		}
 	}

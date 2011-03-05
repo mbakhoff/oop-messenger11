@@ -23,7 +23,14 @@ public class ConnectionManager {
 	 * Create new SocketManager and initialize ConnectionManager
 	 */
 	public ConnectionManager() {
+		Runnable shutDownHook = new Runnable() {
+			public void run() {
+				server.closeAll();
+			}
+		};
 		server = new SocketManager();
+		Runtime.getRuntime().addShutdownHook(new Thread(shutDownHook));
+		new CLI(this);
 		nickMappings = new HashMap<String, String>();
 	}
 	
@@ -34,7 +41,7 @@ public class ConnectionManager {
 		while (true) {
 			try {
 				server.readSockets(this);
-				Thread.sleep(200);
+				Thread.sleep(100);
 			} catch (Exception e) {
 				System.out.println("ConnectionManager: "+e.getMessage());
 			}
@@ -69,7 +76,7 @@ public class ConnectionManager {
 	 * @return true on success, else false
 	 */
 	public boolean sendToIP(String addr, byte[] pkt) {
-		Socket soc = server.getSocketByAddr(addr);
+		Socket soc = server.getSocketByAddr(addr, true);
 		if (soc != null) {
 			try {
 				synchronized (soc) {
@@ -79,6 +86,7 @@ public class ConnectionManager {
 			} catch (Exception e) {
 				System.out.println("ERROR: failed to send to "+
 						soc.getRemoteSocketAddress()+": "+e.getMessage());
+				server.closeSocket(soc);
 				return false;
 			}
 		} else {
@@ -88,16 +96,14 @@ public class ConnectionManager {
 	
 	/**
 	 * @brief Send a packet to given nick
-	 * @param nick nickname of recipent
+	 * @param id nickname or IP of recipent
 	 * @param pkt byte[] created by MessageFormat.create*()
 	 * @return true on success, else false
 	 */
-	public boolean sendToNick(String nick, byte[] pkt) {
-		String addr = nickMappings.get(nick);
+	public boolean send(String id, byte[] pkt) {
+		String addr = nickMappings.get(id);
 		if (addr == null) {
-			System.out.println("DEBUG: could not send message: "+
-					"nick \""+nick+"\" not mapped to ip");
-			return false;
+			return sendToIP(id, pkt);
 		} else {
 			return sendToIP(addr, pkt);
 		}
@@ -112,7 +118,8 @@ public class ConnectionManager {
 	 */
 	public void mapNick(String nick, String ip) {
 		String current = nickMappings.get(nick);
-		if (current == null) {
+		// remap if old not defined or connection dead
+		if (current == null || server.getSocketByAddr(current, false) == null) {
 			System.out.println("ConnectionManager: "+
 					"mapNick "+nick+":"+ip);
 			nickMappings.put(nick, ip);
@@ -132,8 +139,12 @@ public class ConnectionManager {
 		// TODO: eventlistener arch 
 		System.out.println("MSG: "+nick+" says: "+msg);
 		// TODO: echo server; remove later
-		System.out.println("DEBUG: echo-ing: "+msg);
-		sendToNick(nick, MessageFormat.createMessagePacket("you", msg));
+		//System.out.println("DEBUG: echo-ing: "+msg);
+		//send(nick, MessageFormat.createMessagePacket("you", msg));
+	}
+	
+	public void shutDown() {
+		
 	}
 	
 }

@@ -50,12 +50,28 @@ public class SocketManager {
 		}
 	}
 	
+	public void closeSocket(Socket s) {
+		try {
+			s.close();
+		} catch (Exception e) {
+		}
+	}
+	
+	public void closeAll() {
+		synchronized (connections_lock) {
+			Iterator<Socket> it = connections.iterator();
+			while (it.hasNext()) {
+				closeSocket(it.next());
+			}
+		}
+	}
+	 
 	/**
 	 * @brief Look for existing connections to addr, open new if necessary
 	 * @param addr IP-address or hostname to get connection to
 	 * @return Open socket to host or null if connection failed
 	 */
-	public Socket getSocketByAddr(String addr) {
+	public Socket getSocketByAddr(String addr, boolean allowNewConnection) {
 		removeClosedConnections();
 		String ip = null;
 		// try to resolve addr
@@ -71,16 +87,22 @@ public class SocketManager {
 			while (it.hasNext()) {
 				Socket soc = it.next();
 				if (soc.getInetAddress().getHostAddress().equals(ip)) {
-					System.out.println("DEBUG: returned existing connection");
 					return soc;
 				}
 			}
 		}
-		// try to create new connection
-		System.out.println("DEBUG: not connected to "+addr+
-			". Trying to connect..");
+		System.out.println("DEBUG: not connected to "+addr+".");
+		if (allowNewConnection) {
+			System.out.println("Trying to connect..");
+			return makeConnection(ip, SocketManager.PORT);
+		} else {
+			return null;
+		}
+	}
+	
+	protected Socket makeConnection(String addr, int port) {
 		try {
-			Socket soc = new Socket(ip, SocketManager.PORT);
+			Socket soc = new Socket(addr, SocketManager.PORT);
 			System.out.println("DEBUG: established connection to "+addr);
 			addSocket(soc);
 			return soc;
@@ -105,12 +127,17 @@ public class SocketManager {
 				System.out.println("SocketManager: connection from "+
 						soc.getInetAddress().getHostAddress()+
 						":"+soc.getPort());
+				Socket old = getSocketByAddr(
+						soc.getInetAddress().getHostAddress(), false); 
+				if (old != null) {
+					closeSocket(old);
+				}
 				synchronized (connections_lock) {
 					connections.add(soc);
 				}
 			} catch (Exception e) {
-				System.out.println("SocketManager: failed to accept connection: "+
-						e.getMessage());
+				System.out.println("SocketManager: "+
+						"failed to accept connection: "+e.getMessage());
 			}
 			removeClosedConnections();
 		}
