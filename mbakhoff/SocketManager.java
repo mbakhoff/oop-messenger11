@@ -4,7 +4,7 @@ import java.util.Vector;
 import java.util.Iterator;
 import java.net.*;
 
-public class Server {
+public class SocketManager {
 	
 	public static final int PORT = 1800;
 	
@@ -13,19 +13,20 @@ public class Server {
 	protected Object connections_lock = new Object();
 	
 	/**
-	 * @brief Create a new ServerSocket and listen on port Server.PORT
+	 * @brief Create a new ServerSocket and listen on port SocketManager.PORT
 	 * 
 	 * A new thread is created to accept all incoming connections. Open sockets 
 	 * are held in Vector<Socket> connections, closed connections are 
 	 * automatically removed. 
 	 */
-	public Server() {
+	public SocketManager() {
 		connections = new Vector<Socket>();
 		try {
-			ssoc = new ServerSocket(Server.PORT);
-			System.out.println("Server: opened ServerSocket on *:"+PORT);
+			ssoc = new ServerSocket(SocketManager.PORT);
+			System.out.println("SocketManager: opened ServerSocket on "+
+					"*:"+SocketManager.PORT);
 		} catch (Exception e) {
-			System.out.println("Server: failed to create ServerSocket: "+
+			System.out.println("SocketManager: failed to create ServerSocket: "+
 					e.getMessage());
 		}
 		new Thread(new Runnable() {
@@ -79,7 +80,7 @@ public class Server {
 		System.out.println("DEBUG: not connected to "+addr+
 			". Trying to connect..");
 		try {
-			Socket soc = new Socket(ip, Server.PORT);
+			Socket soc = new Socket(ip, SocketManager.PORT);
 			System.out.println("DEBUG: established connection to "+addr);
 			addSocket(soc);
 			return soc;
@@ -98,16 +99,17 @@ public class Server {
 	}
 	
 	protected void acceptConnections() {
-		while (true) {
+		while (!ssoc.isClosed()) {
 			try {
 				Socket soc = ssoc.accept();
-				System.out.println("Server: connection from "+
-						soc.getInetAddress().getHostAddress());
+				System.out.println("SocketManager: connection from "+
+						soc.getInetAddress().getHostAddress()+
+						":"+soc.getPort());
 				synchronized (connections_lock) {
 					connections.add(soc);
 				}
 			} catch (Exception e) {
-				System.out.println("Server: failed to accept connection: "+
+				System.out.println("SocketManager: failed to accept connection: "+
 						e.getMessage());
 			}
 			removeClosedConnections();
