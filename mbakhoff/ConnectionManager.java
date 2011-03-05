@@ -5,25 +5,32 @@ import java.net.Socket;
 
 public class ConnectionManager {
 	
-	protected Server server = null;
+	protected SocketManager server = null;
 	protected HashMap<String,String> nickMappings = null;
 
 	public static void main(String[] args) {
-		new ConnectionManager();
-	}
-	
-	/**
-	 * Create new server instance and wait for new packets. Blocks indefinately. 
-	 */
-	public ConnectionManager() {
-		server = new Server();
-		nickMappings = new HashMap<String, String>();
+		ConnectionManager mgr = new ConnectionManager();
 		/*
 		sendToIP("127.0.0.1", 
 				MessageFormat.createMessagePacket("me", "hello world"));
 		sendToIP("localhost", 
 				MessageFormat.createMessagePacket("me", "hello world2"));
 		*/
+		mgr.mainLoop();
+	}
+	
+	/**
+	 * Create new SocketManager and initialize ConnectionManager
+	 */
+	public ConnectionManager() {
+		server = new SocketManager();
+		nickMappings = new HashMap<String, String>();
+	}
+	
+	/**
+	 * ConnectionManager main loop. Blocks indefinately
+	 */
+	public void mainLoop() {
 		while (true) {
 			try {
 				server.readSockets(this);
@@ -43,13 +50,15 @@ public class ConnectionManager {
 	 * the socket is closed.  
 	 */
 	public void readPackets(Socket soc) {
-		try {
-			if (soc.getInputStream().available() > 0) {
-				System.out.println("DEBUG: reading from socket");
-				MessageFormat.dissectStream(soc, this);
+		synchronized (soc) {
+			try {
+				if (soc.getInputStream().available() > 0) {
+					System.out.println("DEBUG: reading from socket");
+					MessageFormat.dissectStream(soc, this);
+				}
+			} catch (Exception e) {
+				System.out.println("ERROR: socket died? "+e.getMessage());
 			}
-		} catch (Exception e) {
-			System.out.println("ERROR: inputstream died? "+e.getMessage());
 		}
 	}
 	
@@ -63,11 +72,13 @@ public class ConnectionManager {
 		Socket soc = server.getSocketByAddr(addr);
 		if (soc != null) {
 			try {
-				soc.getOutputStream().write(pkt);
+				synchronized (soc) {
+					soc.getOutputStream().write(pkt);
+				}
 				return true;
 			} catch (Exception e) {
-				System.out.println("ERROR: failed to send to "+addr+": "+
-						e.getMessage());
+				System.out.println("ERROR: failed to send to "+
+						soc.getRemoteSocketAddress()+": "+e.getMessage());
 				return false;
 			}
 		} else {

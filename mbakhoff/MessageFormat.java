@@ -1,6 +1,7 @@
 package mbakhoff;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
@@ -30,23 +31,30 @@ public class MessageFormat {
 	}
 	
 	public static byte[] createMessagePacket(String nick, String msg) {
-		int nickBytes = nick.getBytes().length;
-		int msgBytes = msg.getBytes().length;
-		int len = 1 + 4 + nickBytes + 4 + msgBytes + 3;
+		byte[] nickBytes = null;
+		byte[] msgBytes = null;
+		try {
+			nickBytes = nick.getBytes("UTF8");
+			msgBytes = msg.getBytes("UTF8");
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("FATAL: UTF8 not supported. Get a OS, noob ");
+			System.exit(1);
+		}
+		int len = 1+4+nickBytes.length+4+msgBytes.length+3;
 		byte[] data = new byte[len];
 		data[0] = MessageFormat.PKT_MESSAGE;
 		System.arraycopy(
-				intToBytes(nickBytes), 0, 
+				intToBytes(nickBytes.length), 0, 
 				data, 1, 4);
 		System.arraycopy(
-				nick.getBytes(), 0, 
-				data, 5, nickBytes);
+				nickBytes, 0, 
+				data, 5, nickBytes.length);
 		System.arraycopy(
-				intToBytes(msgBytes), 0, 
-				data, 5+nickBytes, 4);
+				intToBytes(msgBytes.length), 0, 
+				data, 5+nickBytes.length, 4);
 		System.arraycopy(
-				msg.getBytes(), 0, 
-				data, 5+nickBytes+4, msgBytes);
+				msgBytes, 0, 
+				data, 5+nickBytes.length+4, msgBytes.length);
 		data[len-3] = 0;
 		data[len-2] = 0;
 		data[len-1] = 0;
@@ -59,7 +67,7 @@ public class MessageFormat {
 			byte type = (byte)in.read();
 			switch (type) {
 			case MessageFormat.PKT_MESSAGE: {
-					if(!dissectStreamMessage(soc, mgr)) {
+					if(!dissectStreamMessage(soc, in, mgr)) {
 						System.out.println("MessageFormat: killing socket "+
 								soc.getRemoteSocketAddress());
 						soc.close();
@@ -79,23 +87,21 @@ public class MessageFormat {
 		}
 	}
 	
+	// TODO: refactor badly needed
 	@SuppressWarnings("unused") // eclipse is dumb
 	protected static boolean dissectStreamMessage(
-			Socket soc, ConnectionManager mgr) {
-		InputStream in = null;
-		try {
-			in = soc.getInputStream();
-		} catch (Exception e) {
-			System.out.println();
-		}
-		byte[] intBuf = new byte[4];
-		byte[] nick = null, msg = null;
-		int nickBytes = -1;
-		int msgBytes = -1;
+			Socket soc, InputStream in, ConnectionManager mgr) 
+	{
+		System.out.println("DEBUG: MessageFormat: dissecting new message "+
+				"from "+soc.getRemoteSocketAddress());
+		byte[] lenBuf = new byte[4];
+		byte[] nickBytes = null, msgBytes = null;
+		int nickLength = -1;
+		int msgLength = -1;
 		int r = 0;
 		// read nick length
 		try {
-			r = readBytes(in, intBuf, 4, 300);
+			r = readBytes(in, lenBuf, 4, 300);
 			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 						"could not read nick length: timeout (read "+r+"/4)");
@@ -106,14 +112,14 @@ public class MessageFormat {
 					"could not read nick length: exception: "+e.getMessage());
 			return false;
 		}
-		nickBytes = bytesToInt(intBuf);
-		nick = new byte[nickBytes];
+		nickLength = bytesToInt(lenBuf);
+		nickBytes = new byte[nickLength];
 		// read nick
 		try {
-			r = readBytes(in, nick, nickBytes, 1000);
-			if (r < nickBytes) {
+			r = readBytes(in, nickBytes, nickLength, 1000);
+			if (r < nickLength) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read nick: timeout (read "+r+"/"+nickBytes+")");
+					"could not read nick: timeout (read "+r+"/"+nickLength+")");
 				return false;
 			}
 		} catch (Exception e) {
@@ -123,7 +129,7 @@ public class MessageFormat {
 		}
 		// read msg length
 		try {
-			r = readBytes(in, intBuf, 4, 300);
+			r = readBytes(in, lenBuf, 4, 300);
 			if (r < 4) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 					"could not read msg length: timeout (read "+r+"/4)");
@@ -134,14 +140,14 @@ public class MessageFormat {
 				"could not read msg length: exception: "+e.getMessage());
 			return false;
 		}
-		msgBytes = bytesToInt(intBuf);
-		msg = new byte[msgBytes];
+		msgLength = bytesToInt(lenBuf);
+		msgBytes = new byte[msgLength];
 		// read msg
 		try {
-			r = readBytes(in, msg, msgBytes, 1000);
-			if (intBuf == null) {
+			r = readBytes(in, msgBytes, msgLength, 1000);
+			if (lenBuf == null) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
-					"could not read msg: timeout (read "+r+"/"+msgBytes+")");
+					"could not read msg: timeout (read "+r+"/"+msgLength+")");
 				return false;
 			}
 		} catch (Exception e) { 
@@ -151,7 +157,7 @@ public class MessageFormat {
 		}
 		// read end0
 		try {
-			r = readBytes(in, intBuf, 3, 300);
+			r = readBytes(in, lenBuf, 3, 300);
 			if (r < 3) {
 				System.out.println("MessageFormat:dissectStreamMessage: "+
 					"could not read end0: timeout (read "+r+"/3)");
@@ -163,17 +169,26 @@ public class MessageFormat {
 			return false;
 		}
 		// check for end0
-		if (intBuf[0]==0 && intBuf[1]==0 && intBuf[2]==0) {
+		if (lenBuf[0]==0 && lenBuf[1]==0 && lenBuf[2]==0) {
+			String nick = null;
+			String msg = null;
+			try {
+				nick = new String(nickBytes, "UTF8");
+				msg = new String(msgBytes, "UTF8");
+			} catch (UnsupportedEncodingException e) {
+				System.err.println("FATAL: UTF8 not supported. Get a OS, noob");
+				System.exit(1);
+			}
 			// map nick
-			mgr.mapNick(new String(nick), soc.getInetAddress().getHostAddress());
+			mgr.mapNick(nick, soc.getInetAddress().getHostAddress());
 			// announce message
-			mgr.messageReceived(new String(nick), new String(msg));
+			mgr.messageReceived(nick, msg);
 			return true;
 		} else {
 			System.out.println(
 					String.format("MessageFormat:dissectStreamMessage: "+
 							"end0 missing (%x,%x,%x). stream out of sync? ", 
-							intBuf[0], intBuf[1], intBuf[2]));
+							lenBuf[0], lenBuf[1], lenBuf[2]));
 			return false;
 		}
 	}
