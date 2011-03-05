@@ -1,0 +1,46 @@
+package kristina;
+import java.util.Scanner;
+import java.net.Socket;
+import java.lang.System;
+import java.util.Vector;
+import java.io.InputStream;
+
+// pane utf-8 encodingusse
+
+public class Program {
+	
+	public static void main(String[] args) {
+		
+		System.out.println("Enter you nickname:");
+		Scanner scan = new Scanner(System.in);
+		String nickname = scan.nextLine();
+		
+		Object lock = new Object();
+		
+		Vector<Socket> sockets = new Vector<Socket>();
+		ReceivingSide r = new ReceivingSide(sockets, lock);
+		
+		Scanner userScanner = new Scanner(System.in);
+		UserSide u = new UserSide(userScanner, sockets, nickname, lock);
+		//System.out.println("made it this far");
+		
+		while (true) {
+			synchronized (lock) {
+				for (Socket s : sockets) {
+					try {
+						InputStream input = s.getInputStream();
+						if (input.available() != 0) {
+							ReceivingSide.incomingMessagesParser(input);
+						}
+						//if (messageScanner.hasNext()) {
+							//System.out.println("There was something here");
+							//ReceivingSide.incomingMessagesParser(messageScanner);
+						//}
+					} catch (Exception e) {
+						e.getMessage();
+					}
+				}
+			}
+		}
+	}
+}
