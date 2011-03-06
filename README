@@ -1,2 +1,16 @@
 oop-messenger11
 
+proto:
+
+MESSAGE:
+1 byte, value 1, sõnumi tüüp
+4 byte, value x, nickname pikkus baitides
+x byte, value ?, nickname baidid
+4 byte, value y, sõnumi pikkus baitides
+y byte, value ?, sõnumi baidid
+3 byte, value {0,0,0}, lõpu kontrollbaidid
+
+ALIVE:
+1 byte, value 2, sõnumi tüüp
+3 byte, value {0,0,0}, lõpu kontrollbaidid
+
