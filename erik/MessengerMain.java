@@ -1,4 +1,4 @@
-package oopmessenger.erik;
+package erik;
 
 import java.io.*;
 import java.net.*;
