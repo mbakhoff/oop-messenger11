@@ -70,7 +70,7 @@ public class CLI {
 		System.out.println("CLI: quit");
 	}
 	
-	public void map(String s) {
+	protected void map(String s) {
 		int pos = s.indexOf(" ");
 		if (pos == -1)
 			return; // no empty mappings

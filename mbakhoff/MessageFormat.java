@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 public class MessageFormat {
 
 	protected static final byte PKT_MESSAGE = 1;
+	protected static final byte PKT_ALIVE   = 2;
 	
 	protected static byte[] intToBytes(int i) {
 		return ByteBuffer.allocate(4).putInt(i).array();
@@ -61,6 +62,10 @@ public class MessageFormat {
 		return data;
 	}
 	
+	public static byte[] createAliveMessage() {
+		return new byte[] { PKT_ALIVE, 0, 0, 0 };
+	}
+	
 	public static void dissectStream(Socket soc, ConnectionManager mgr) {
 		try {
 			InputStream in = soc.getInputStream();
@@ -74,6 +79,14 @@ public class MessageFormat {
 					} 
 					break;
 				}
+			case MessageFormat.PKT_ALIVE: {
+				if(!dissectStreamAlive(soc, in, mgr)) {
+					System.out.println("MessageFormat: killing socket "+
+							soc.getRemoteSocketAddress());
+					soc.close();
+				} 
+				break;
+			}
 			default: {
 					System.out.println("MessageFormat:dissectStream: "+
 							"EOF or invalid type byte: "+type+"; killing "+
@@ -84,6 +97,34 @@ public class MessageFormat {
 		} catch (Exception e) {
 			System.out.println("MessageFormat:dissectStream: "+
 					"could not read type byte: "+e.getMessage());
+		}
+	}
+	
+	protected static boolean dissectStreamAlive(
+			Socket soc, InputStream in, ConnectionManager mgr) 
+	{
+		System.out.println("DEBUG: MessageFormat: dissecting new alive "+
+				"from "+soc.getRemoteSocketAddress());
+		byte[] buf = new byte[3];
+		int r = 0;
+		try {
+			r = readBytes(in, buf, 3, 300);
+			if (r < 4) {
+				System.out.println("MessageFormat:dissectStreamAlive: "+
+						"could not read zero3: timeout (read "+r+"/3)");
+				return false;
+			}
+		} catch (Exception e) {
+			System.out.println("MessageFormat:dissectStreamAlive: "+
+					"could not read zero3: exception: "+e.getMessage());
+			return false;
+		}
+		if (buf[0] == 0 && buf[1] == 0 && buf[2] == 0) {
+			return true;
+		} else {
+			System.out.println("MessageFormat:dissectStreamAlive: "+
+					"zero3 != {0,0,0}");
+			return false;
 		}
 	}
 	

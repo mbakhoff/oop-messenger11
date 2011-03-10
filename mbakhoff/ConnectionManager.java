@@ -10,12 +10,6 @@ public class ConnectionManager {
 
 	public static void main(String[] args) {
 		ConnectionManager mgr = new ConnectionManager();
-		/*
-		sendToIP("127.0.0.1", 
-				MessageFormat.createMessagePacket("me", "hello world"));
-		sendToIP("localhost", 
-				MessageFormat.createMessagePacket("me", "hello world2"));
-		*/
 		mgr.mainLoop();
 	}
 	
@@ -25,7 +19,7 @@ public class ConnectionManager {
 	public ConnectionManager() {
 		Runnable shutDownHook = new Runnable() {
 			public void run() {
-				server.closeAll();
+				server.shutDown();
 			}
 		};
 		server = new SocketManager();
@@ -37,7 +31,7 @@ public class ConnectionManager {
 	/**
 	 * ConnectionManager main loop. Blocks indefinately
 	 */
-	public void mainLoop() {
+	protected void mainLoop() {
 		while (true) {
 			try {
 				server.readSockets(this);
@@ -65,6 +59,7 @@ public class ConnectionManager {
 				}
 			} catch (Exception e) {
 				System.out.println("ERROR: socket died? "+e.getMessage());
+				server.closeSocket(soc);
 			}
 		}
 	}
@@ -105,12 +100,16 @@ public class ConnectionManager {
 		if (addr == null) {
 			return sendToIP(id, pkt);
 		} else {
-			return sendToIP(addr, pkt);
+			boolean ret = sendToIP(addr, pkt);
+			if (!ret)
+				unmapNick(id);
+			return ret;
 		}
 	}
 	
 	// TODO: collisions?
 	// TODO: clear closed connections
+	// TODO: sync
 	/**
 	 * @brief Bind ip-address to nickname
 	 * @param nick nickname to bind
@@ -118,16 +117,42 @@ public class ConnectionManager {
 	 */
 	public void mapNick(String nick, String ip) {
 		String current = nickMappings.get(nick);
-		// remap if old not defined or connection dead
-		if (current == null || server.getSocketByAddr(current, false) == null) {
+		// map if not defined
+		if (current == null) {
 			System.out.println("ConnectionManager: "+
 					"mapNick "+nick+":"+ip);
-			nickMappings.put(nick, ip);
+			synchronized (nickMappings) {
+				if (server.getSocketByAddr(ip, true) != null)
+					nickMappings.put(nick, ip);
+			}
+		// if defined, check if connection still alive
 		} else if (!current.equals(ip)) {
-			System.out.println("ConnectionManager: "+
-					"nickname collision: \""+nick+"\": "+
-					"current:"+current+"; new:"+ip);
+			if (checkAlive(current)) {
+				System.out.println("ConnectionManager: "+
+						"nickname collision: \""+nick+"\": "+
+						"current:"+current+"; new:"+ip);
+			} else {
+				System.out.println("ConnectionManager: "+
+						"dead nickname mapping: "+nick+":"+current);
+				System.out.println("ConnectionManager: "+
+						"remapping "+nick+":"+ip);
+				synchronized (nickMappings) {
+					nickMappings.remove(nick);
+					if (server.getSocketByAddr(ip, true) != null)
+						nickMappings.put(nick, ip);
+				}
+			}
 		}
+	}
+	
+	public void unmapNick(String nick) {
+		synchronized (nickMappings) {
+			nickMappings.remove(nick);
+		}
+	}
+	
+	public boolean checkAlive(String addr) {
+		return sendToIP(addr, MessageFormat.createAliveMessage());
 	}
 	
 	/**
@@ -138,13 +163,6 @@ public class ConnectionManager {
 	public void messageReceived(String nick, String msg) {
 		// TODO: eventlistener arch 
 		System.out.println("MSG: "+nick+" says: "+msg);
-		// TODO: echo server; remove later
-		//System.out.println("DEBUG: echo-ing: "+msg);
-		//send(nick, MessageFormat.createMessagePacket("you", msg));
-	}
-	
-	public void shutDown() {
-		
 	}
 	
 }

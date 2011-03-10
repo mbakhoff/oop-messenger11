@@ -45,23 +45,44 @@ public class SocketManager {
 		synchronized (connections_lock) {
 			Iterator<Socket> it = connections.iterator();
 			while (it.hasNext()) {
-				mgr.readPackets(it.next());
+				Socket soc = it.next();
+				synchronized (soc) {
+					if (soc.isConnected()) {
+						mgr.readPackets(soc);
+					}
+				}
 			}
 		}
 	}
 	
 	public void closeSocket(Socket s) {
 		try {
-			s.close();
-		} catch (Exception e) {
-		}
+			synchronized (s) {
+				if (!s.isClosed()) {
+					try {
+						s.close();
+					} catch (Exception e) {}
+				}
+			}
+		} catch (Exception e) {}
 	}
 	
-	public void closeAll() {
+	public void shutDown() {
+		try {
+			ssoc.close();
+		} catch (Exception e) {}
 		synchronized (connections_lock) {
 			Iterator<Socket> it = connections.iterator();
 			while (it.hasNext()) {
-				closeSocket(it.next());
+				Socket soc = it.next();
+				synchronized (soc) {
+					if (!soc.isClosed()) {
+						try {
+							soc.close();
+						} catch (Exception e) {}
+					}
+				}
+				it.remove();
 			}
 		}
 	}
@@ -91,9 +112,8 @@ public class SocketManager {
 				}
 			}
 		}
-		System.out.println("DEBUG: not connected to "+addr+".");
 		if (allowNewConnection) {
-			System.out.println("Trying to connect..");
+			System.out.println("Trying to connect to "+addr);
 			return makeConnection(ip, SocketManager.PORT);
 		} else {
 			return null;
@@ -114,7 +134,6 @@ public class SocketManager {
 	}
 	
 	protected void addSocket(Socket soc) {
-		removeClosedConnections();
 		synchronized (connections_lock) {
 			connections.add(soc);
 		}
@@ -130,6 +149,9 @@ public class SocketManager {
 				Socket old = getSocketByAddr(
 						soc.getInetAddress().getHostAddress(), false); 
 				if (old != null) {
+					System.out.println("SocketManager: "+
+							"replacing old "+old.getRemoteSocketAddress()+
+							" with new "+soc.getRemoteSocketAddress());
 					closeSocket(old);
 				}
 				synchronized (connections_lock) {
@@ -139,7 +161,6 @@ public class SocketManager {
 				System.out.println("SocketManager: "+
 						"failed to accept connection: "+e.getMessage());
 			}
-			removeClosedConnections();
 		}
 	}
 	
