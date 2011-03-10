@@ -6,19 +6,18 @@ import java.nio.ByteBuffer;
 
 public class Send {
 
-    MessengerMain mm;
-    OutputStream out = null;
+    public static OutputStream out = null;
 
-    private byte[] intToByte(int in) {
+    private static byte[] intToByte(int in) {
         return ByteBuffer.allocate(4).putInt(in).array();
     }
 
-    public byte[] encodePacket(String msg) {
-        byte[] nickBytes = mm.nick.getBytes();
+    public static byte[] encodePacket(String msg) {
+        byte[] nickBytes = MessengerMain.nick.getBytes();
         byte[] msgBytes = msg.getBytes();
         int size = 1 + 4 + nickBytes.length + 4 + msgBytes.length + 3;
         byte[] packet = new byte[size];
-        packet[0] = (byte) 0;
+        packet[0] = (byte) 1;
         byte[] packetend = {0x00, 0x00, 0x00};
         int pc = 1;
 
@@ -35,7 +34,7 @@ public class Send {
         return packet;
 }
 
-    public boolean sendPacket(Socket sock, byte[] packet) {
+    public static boolean sendPacket(Socket sock, byte[] packet) {
         try {
             out = sock.getOutputStream();
             out.write(packet);
