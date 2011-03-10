@@ -1,11 +1,13 @@
 package erik;
 
+import java.io.*;
+import java.net.*;
 import java.nio.ByteBuffer;
 
 public class Send {
 
     MessengerMain mm;
-
+    OutputStream out = null;
 
     private byte[] intToByte(int in) {
         return ByteBuffer.allocate(4).putInt(in).array();
@@ -33,7 +35,14 @@ public class Send {
         return packet;
 }
 
-    public boolean sendPacket(String ip, Byte[] packet) {
-        return false;
+    public boolean sendPacket(Socket sock, byte[] packet) {
+        try {
+            out = sock.getOutputStream();
+            out.write(packet);
+            return true;
+        } catch (IOException ex) {
+            System.out.println("Failed to send packet: " + ex.getMessage());
+            return false;
+        }
     }
 }

@@ -92,7 +92,9 @@ public class MessengerMain {
     public Socket openSocket(String ip, int port) {
 
         try {
-            Socket sock = new Socket(ip, port);
+            SocketAddress addr = new InetSocketAddress(ip, port);
+            Socket sock = new Socket();
+            sock.connect(addr, 600000);
             return sock;
         }
         catch (UnknownHostException e) {
@@ -104,8 +106,6 @@ public class MessengerMain {
             return null;
         }
     }
-
-
 
 
 // System exit method //
