@@ -108,7 +108,7 @@ public class ReceivingSide implements Runnable{
 				}
 			}
 			
-			nick = new String(b_nick);
+			nick = new String(b_nick, "UTF-8");
 			
 			while (true) {
 				if (input.available() >= 4) {
@@ -139,7 +139,7 @@ public class ReceivingSide implements Runnable{
 				}
 			}
 			
-			msg = new String(b_msg);
+			msg = new String(b_msg, "UTF-8");
 			
 			int ctr = 0;
 			while (ctr < 3) {

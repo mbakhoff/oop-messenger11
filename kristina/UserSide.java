@@ -64,7 +64,7 @@ public class UserSide implements Runnable{
 		}
 		
 		else if (sockets.size() == 0) {
-			System.out.println("There is nobody to send messages to.");
+			System.out.println("You are not currently connected to anybody.");
 		}
 		
 		else if (messageArray[0].equals("-alive")) {
@@ -82,6 +82,7 @@ public class UserSide implements Runnable{
 					try {
 						out = sockets.elementAt(i).getOutputStream();
 						out.write(b);
+						out.flush();
 					} catch (Exception e) {
 						System.out.println(e.getMessage());
 						sockets.remove(i);
@@ -93,13 +94,24 @@ public class UserSide implements Runnable{
 		else {
 			byte id = 1;
 			
-			byte[] b_nick = nickname.getBytes();
-			int nick_len = b_nick.length;
-			byte[] b_nick_len = ByteBuffer.allocate(4).putInt(nick_len).array();
+			byte[] b_nick = null;
+			int nick_len = -1;
+			byte[] b_nick_len = null;
+			byte[] msg = null;
+			int msg_len = -1;
+			byte[] b_msg_len = null;
 			
-			byte[] msg = line.getBytes();
-			int msg_len = msg.length;
-			byte[] b_msg_len = ByteBuffer.allocate(4).putInt(msg_len).array();
+			try{
+				b_nick = nickname.getBytes("UTF-8");
+				nick_len = b_nick.length;
+				b_nick_len = ByteBuffer.allocate(4).putInt(nick_len).array();
+				
+				msg = line.getBytes("UTF-8");
+				msg_len = msg.length;
+				b_msg_len = ByteBuffer.allocate(4).putInt(msg_len).array();
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+			}
 			
 			int total_len = 1 + 4 + nick_len + 4 + msg_len + 3;
 			
