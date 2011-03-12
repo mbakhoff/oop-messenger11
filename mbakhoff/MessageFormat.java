@@ -109,7 +109,7 @@ public class MessageFormat {
 		int r = 0;
 		try {
 			r = readBytes(in, buf, 3, 300);
-			if (r < 4) {
+			if (r < 3) {
 				System.out.println("MessageFormat:dissectStreamAlive: "+
 						"could not read zero3: timeout (read "+r+"/3)");
 				return false;

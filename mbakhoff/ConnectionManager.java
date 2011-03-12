@@ -151,6 +151,12 @@ public class ConnectionManager {
 		}
 	}
 	
+	public String getMapping(String nick) {
+		synchronized (nickMappings) {
+			return nickMappings.get(nick);
+		}
+	}
+	
 	public boolean checkAlive(String addr) {
 		return sendToIP(addr, MessageFormat.createAliveMessage());
 	}
