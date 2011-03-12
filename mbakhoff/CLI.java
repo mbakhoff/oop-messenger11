@@ -49,6 +49,10 @@ public class CLI {
 			send(value);
 		if (isMatch(key, "map", 1) && value != null)
 			map(value);
+		if (isMatch(key, "ping-nick", 6) && value != null)
+			pingNick(value);
+		if (isMatch(key, "ping-ip", 6) && value != null)
+			pingIP(value);
 		if (isMatch(key, "quit", 1))
 			System.exit(0);
 	}
@@ -67,7 +71,28 @@ public class CLI {
 	protected void help() {
 		System.out.println("CLI: map nick ip");
 		System.out.println("CLI: send nick/ip msg");
+		System.out.println("CLI: ping-ip ip");
+		System.out.println("CLI: ping-nick nick");
 		System.out.println("CLI: quit");
+	}
+	
+	protected void pingIP(String ip) {
+		if (mgr.checkAlive(ip)) {
+			System.out.println(ip + " is UP");
+		} else {
+			System.out.println(ip + " is DOWN");
+		}
+	}
+	
+	protected void pingNick(String nick) {
+		String ip = mgr.getMapping(nick);
+		if (ip == null) {
+			System.out.println(nick + " is not mapped");
+		} else if (mgr.checkAlive(ip)) {
+			System.out.println(ip + " is UP");
+		} else {
+			System.out.println(ip + " is DOWN");
+		}
 	}
 	
 	protected void map(String s) {
