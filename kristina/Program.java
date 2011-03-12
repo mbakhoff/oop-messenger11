@@ -6,6 +6,7 @@ import java.util.Vector;
 import java.io.InputStream;
 
 // pane utf-8 encodingusse
+// tee nii, et sõnumeid saaks saata üksikutele inimestele eraldi
 
 public class Program {
 	
@@ -20,7 +21,7 @@ public class Program {
 		Vector<Socket> sockets = new Vector<Socket>();
 		ReceivingSide r = new ReceivingSide(sockets, lock);
 		
-		Scanner userScanner = new Scanner(System.in);
+		Scanner userScanner = new Scanner(System.in, "UTF-8");
 		UserSide u = new UserSide(userScanner, sockets, nickname, lock);
 		//System.out.println("made it this far");
 		
@@ -37,7 +38,7 @@ public class Program {
 							//ReceivingSide.incomingMessagesParser(messageScanner);
 						//}
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}

@@ -42,7 +42,7 @@ public class UserSide implements Runnable{
 						System.out.println("Connection established.");
 						return;
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			} else {
@@ -56,10 +56,37 @@ public class UserSide implements Runnable{
 					try {
 						s.close();
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 				System.exit(0);
+			}
+		}
+		
+		else if (sockets.size() == 0) {
+			System.out.println("There is nobody to send messages to.");
+		}
+		
+		else if (messageArray[0].equals("-alive")) {
+			byte id = 2;
+			byte[] b = new byte[4];
+			b[0] = id;
+			b[1] = 0;
+			b[2] = 0;
+			b[3] = 0;
+			
+			OutputStream out;
+			
+			synchronized (lock) {
+				for (int i = 0; i < sockets.size(); i++) {
+					try {
+						out = sockets.elementAt(i).getOutputStream();
+						out.write(b);
+					} catch (Exception e) {
+						System.out.println(e.getMessage());
+						sockets.remove(i);
+					}
+				}
 			}
 		}
 		
@@ -92,12 +119,13 @@ public class UserSide implements Runnable{
 			OutputStream out;
 			
 			synchronized (lock) {
-				for (Socket s : sockets) {
+				for (int i = 0; i < sockets.size(); i++) {
 					try {
-						out = s.getOutputStream();
+						out = sockets.elementAt(i).getOutputStream();
 						out.write(b);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
+						sockets.remove(i);
 					}
 				}
 			}

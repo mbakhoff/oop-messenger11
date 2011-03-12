@@ -19,7 +19,7 @@ public class ReceivingSide implements Runnable{
 				servSock = new ServerSocket(1800);
 				new Thread(this).start();
 			} catch (Exception e) {
-				e.getMessage();
+				System.out.println(e.getMessage());
 			}
 		}
 	}
@@ -41,7 +41,7 @@ public class ReceivingSide implements Runnable{
 						newSocket.getInetAddress().getHostAddress() + 
 						". Connection established.");
 			} catch (Exception e) {
-				e.getMessage();
+				System.out.println(e.getMessage());
 			}
 		}
 	}
@@ -67,11 +67,11 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			} catch (Exception e) {
-					e.getMessage();
+				System.out.println(e.getMessage());
 			}
 		}
 		
@@ -87,7 +87,7 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}
@@ -103,7 +103,7 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}
@@ -118,7 +118,7 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}
@@ -134,7 +134,7 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}
@@ -145,7 +145,7 @@ public class ReceivingSide implements Runnable{
 			while (ctr < 3) {
 				if (input.available() >= 1) {
 					if (input.read() != 0) {
-						System.out.println("Error: The message did not arrive properly.");
+						System.out.println("Error: A message did not arrive properly.");
 						return;
 					}
 					ctr++;
@@ -153,14 +153,37 @@ public class ReceivingSide implements Runnable{
 					try {
 						Thread.sleep(200);
 					} catch (Exception e) {
-						e.getMessage();
+						System.out.println(e.getMessage());
 					}
 				}
 			}
 			
 			System.out.println(nick + " says: " + msg);
 			} catch (Exception e) {
-				e.getMessage();
+				System.out.println(e.getMessage());
+			}
+		}
+		
+		else if (id == 2) {
+			try {
+				int ctr = 0;
+				while (ctr < 3) {
+					if (input.available() >= 1) {
+						if (input.read() != 0) {
+							System.out.println("Error: The message did not arrive properly.");
+							return;
+						}
+						ctr++;
+					} else {
+						try {
+							Thread.sleep(200);
+						} catch (Exception e) {
+							System.out.println(e.getMessage());
+						}
+					}
+				}
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
 			}
 		}
 	}
