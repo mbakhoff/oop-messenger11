@@ -7,14 +7,21 @@ import java.nio.ByteBuffer;
 public class Send {
 
     public static OutputStream out = null;
-
+    
+// Converts integer to byte array //
     private static byte[] intToByte(int in) {
         return ByteBuffer.allocate(4).putInt(in).array();
     }
-
+ // Assembles packet - syntax: [packet type][nick length][nick][msg length][msg][endbytes] //
     public static byte[] encodePacket(String msg) {
-        byte[] nickBytes = MessengerMain.nick.getBytes();
-        byte[] msgBytes = msg.getBytes();
+        byte[] nickBytes = null;
+        byte[] msgBytes = null;
+        try {
+            nickBytes = MessengerMain.nick.getBytes("UTF8");
+            msgBytes = msg.getBytes("UTF8");
+        } catch (UnsupportedEncodingException ex) {
+            System.out.println("Invalid encoding: " + ex.getMessage());
+        }
         int size = 1 + 4 + nickBytes.length + 4 + msgBytes.length + 3;
         byte[] packet = new byte[size];
         packet[0] = (byte) 1;
@@ -33,15 +40,18 @@ public class Send {
 
         return packet;
 }
-
-    public static boolean sendPacket(Socket sock, byte[] packet) {
+// Assembles packet to check if socket is alive - checkalive packet //
+    public static byte[] alivePacket() {
+        return new byte[] {2, 0, 0, 0};
+    } 
+// Sends user defined byte packet to user defined socket //
+    public static void sendPacket(Socket sock, byte[] packet) {
         try {
             out = sock.getOutputStream();
             out.write(packet);
-            return true;
+            System.out.println("debug: done");
         } catch (IOException ex) {
             System.out.println("Failed to send packet: " + ex.getMessage());
-            return false;
         }
     }
 }
