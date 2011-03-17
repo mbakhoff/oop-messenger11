@@ -25,15 +25,14 @@ public class ConsoleInterface extends Execution implements Runnable{
         while(true) {
             scn = new Scanner(System.in, "UTF8");
                 try {
-                    interrupt(scn);
+                    lineListner(scn);
                 }
                 catch(Exception e) {
-
                 }
             }
     }
 
-    public void interrupt(Scanner scn){
+    public void lineListner(Scanner scn){
         int command = -1;
         String[] tokens = getFirstToken(scn.nextLine());
 
@@ -68,18 +67,18 @@ public class ConsoleInterface extends Execution implements Runnable{
 
             case 2:
 
-            case 3:
-                if(info == null)
-                    System.out.println("Correct syntax is: msg <reveicer nickname> <message>");
-                else {
+            case 3: 
+                //if(info == null)
+                    //System.out.println("Correct syntax is: msg <reveicer nickname> <message>");
+                //else {
                         String[] tokens = getFirstToken(info);
+                        //Send.sendPacket(MessengerMain.socketList.get(0), Send.encodePacket(tokens[1]));
                         Send.sendPacket(MessengerMain.s, Send.encodePacket(tokens[1]));
-                        System.out.println("Sending packet to: " + mm.s);
-                }
-
+                        break;
+                //}  
             case 4:
                 String[] token = getFirstToken(info);
-                openAndAddSocket(token[0], mm.com_port);
+                openAndAddSocket(token[0], 1800);
             case 5:
 
             case 6:

@@ -10,16 +10,14 @@ public class MessengerMain {
     public static String nick = "erik";
     public static ArrayList<Socket> socketList = new ArrayList<Socket>();
     public static ArrayList<String> nameList = new ArrayList<String>();
+    InputStream input = null;
+    static Socket s = null;
     Receive r  = null;
     ConsoleInterface ci;
-    public static Socket s = null;
     
 // Main runtime //
     public MessengerMain() {
     	warmUp();
-        
-        InputStream input = null;
-        byte[] b = null;
         try {
             s = new Socket("127.0.0.1", 1800);
         }
@@ -27,22 +25,25 @@ public class MessengerMain {
             System.out.println("failed:" + e.getMessage());
         }
         
-        Send.sendPacket(s, Send.encodePacket("i has message"));
-        System.out.println("getting info from: " + socketList.get(0));
+        Send.sendPacket(s, Send.encodePacket("debug: selfmessage works"));
         while(true) {
             try {
-                input = socketList.get(0).getInputStream();
-                //System.out.println(socketList.get(0));
-            if (input.available() > 0)
-                Receive.decodePacket(input);
+            	if(socketList.size() > 0) {
+            		input = socketList.get(0).getInputStream();
+            		if (input.available() > 0) {
+            			System.out.println("getting info from: " + socketList.get(0));
+            			Receive.decodePacket(input);
+            		}
+            	}
         }
+            
         catch(Exception e) {
             System.out.println("failed sss: " + e.getMessage());
         }
-
         }
     }
-    
+//Warms up the messenger and starts up threads //
+// Starts up stuff //
     private void warmUp() {
         Random rand = new Random();
     	System.out.println("Messenger .11."+ rand.nextInt(8192) +" warming up...");
@@ -58,8 +59,8 @@ public class MessengerMain {
         ci = new ConsoleInterface();
         System.out.println("Ready for operation. Please use command <help> for manual");
     }
- 
-// Checks for internet connection //
+
+// Checks for Internet connection //
     private boolean checkConnection() {
              return false;
     }

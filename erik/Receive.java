@@ -11,15 +11,16 @@ public class Receive implements Runnable {
 
     public Receive() {
         try {
-            servSock = new ServerSocket(mm.com_port);
+            servSock = new ServerSocket(1800);
             new Thread(this).start();
-            System.out.println("Listening thread started. Now listening on port: " + mm.com_port);
+            System.out.println("Listening thread started. Now listening on port: " + MessengerMain.com_port);
         }
         catch (IOException ex) {
+        	System.out.println("ServerSocket not started:" + ex.getMessage());
         }
     }
 
-// Converts byte array to integer //
+// Converts byte array to integer (used to get the length of nickname and message) //
     private static int byteToInt(byte[] in) {
         return ByteBuffer.wrap(in).getInt();
     }
@@ -68,14 +69,13 @@ public class Receive implements Runnable {
         else if(inBuf[0] == 2)
             ;
     }
-
-
-
+// Main loop - listens for incoming connections //
     public void run() {
         while(true) {
             try {
                 Socket s = servSock.accept();
                 MessengerMain.socketList.add(s);
+                //System.out.println(MessengerMain.socketList.size());
                 System.out.println("Incoming socket from: " + s.getInetAddress() + " port: " + s.getPort());
             }
             catch (Exception ex) {

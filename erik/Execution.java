@@ -4,7 +4,7 @@ import java.net.*;
 
 /**
  * @brief This class contains methods necessary to execute the will of the user
- * @discription Both user interfaces - command line and graphical will inherit
+ * @description Both user interfaces - command line and graphical will inherit
  * this class and use it to execute commands given by the user
  *
  * @author erik
@@ -42,14 +42,14 @@ public class Execution {
             sock = new Socket(ip, port);
         }
         catch(Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("ERRROOOORRRRR: " + e.getMessage());
         }
 
-    	mm.socketList.add(sock);
-    	mm.nameList.add(sock.getInetAddress().toString());
+    	MessengerMain.socketList.add(sock);
+    	MessengerMain.nameList.add(sock.getInetAddress().toString());
     }
 
-// Binds IP aadress to the specified nickname //
+// Binds IP address to the specified nickname //
 // Returns whether the operation was a success or not //
     protected void bindIpToNickname(String ip, String nick) {
 
@@ -72,7 +72,7 @@ public class Execution {
     }
 
 
-// Splits on space and get the first value, return rest in original syntax //
+// Splits on space and get the first value, return rest //
     public String[] getFirstToken(String input) {
         String[] tolkens = input.split(" ");
         String[] returnValues = new String[1];
