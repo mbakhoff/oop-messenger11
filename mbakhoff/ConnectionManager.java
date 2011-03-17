@@ -7,11 +7,6 @@ public class ConnectionManager {
 	
 	protected SocketManager server = null;
 	protected HashMap<String,String> nickMappings = null;
-
-	public static void main(String[] args) {
-		ConnectionManager mgr = new ConnectionManager();
-		mgr.mainLoop();
-	}
 	
 	/**
 	 * Create new SocketManager and initialize ConnectionManager
@@ -24,7 +19,6 @@ public class ConnectionManager {
 		};
 		server = new SocketManager();
 		Runtime.getRuntime().addShutdownHook(new Thread(shutDownHook));
-		new CLI(this);
 		nickMappings = new HashMap<String, String>();
 	}
 	
@@ -35,7 +29,7 @@ public class ConnectionManager {
 		while (true) {
 			try {
 				server.readSockets(this);
-				Thread.sleep(100);
+				Thread.sleep(300);
 			} catch (Exception e) {
 				System.out.println("ConnectionManager: "+e.getMessage());
 			}
@@ -51,17 +45,25 @@ public class ConnectionManager {
 	 * the socket is closed.  
 	 */
 	public void readPackets(Socket soc) {
+		boolean ok = true;
 		synchronized (soc) {
 			try {
 				if (soc.getInputStream().available() > 0) {
 					System.out.println("DEBUG: reading from socket");
-					MessageFormat.dissectStream(soc, this);
+					if (!MessageFormat.dissectStream(soc, this)) {
+						System.out.println("WARNING: read failed; "+
+								"killing socket "+soc.getRemoteSocketAddress());
+						ok = false;
+					}
 				}
 			} catch (Exception e) {
 				System.out.println("ERROR: socket died? "+e.getMessage());
-				server.closeSocket(soc);
+				ok = false;
 			}
 		}
+		// close broken connection
+		if (!ok)
+			server.closeSocket(soc);
 	}
 	
 	/**
@@ -76,6 +78,7 @@ public class ConnectionManager {
 			try {
 				synchronized (soc) {
 					soc.getOutputStream().write(pkt);
+					soc.getOutputStream().flush();
 				}
 				return true;
 			} catch (Exception e) {

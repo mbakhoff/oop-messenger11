@@ -7,6 +7,12 @@ public class CLI {
 	protected ConnectionManager mgr = null;
 	protected boolean active = true;
 	
+	public static void main(String[] args) {
+		ConnectionManager mgr = new ConnectionManager();
+		new CLI(mgr);
+		mgr.mainLoop();
+	}
+	
 	public CLI(ConnectionManager mgr) {
 		this.mgr = mgr;
 		help();
