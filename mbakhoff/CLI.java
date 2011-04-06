@@ -2,7 +2,7 @@ package mbakhoff;
 
 import java.util.Scanner;
 
-public class CLI {
+public class CLI implements MEventListener {
 
 	protected ConnectionManager mgr = null;
 	protected boolean active = true;
@@ -10,11 +10,13 @@ public class CLI {
 	public static void main(String[] args) {
 		ConnectionManager mgr = new ConnectionManager();
 		new CLI(mgr);
+		new Gui(mgr);
 		mgr.mainLoop();
 	}
 	
 	public CLI(ConnectionManager mgr) {
 		this.mgr = mgr;
+		EventDispatch.get().addListener(this);
 		help();
 		new Thread(new Runnable() {
 			public void run() {
@@ -34,6 +36,17 @@ public class CLI {
 		active = false;
 	}
 	
+	public void messageReceived(String nick, String message) {
+		System.out.println(nick+" says: "+message);
+	}
+
+	public void messageDebug(String message) {
+		System.out.println("DEBUG: "+message);
+	}
+	
+	public void peeringEvent() {
+	}
+	
 	protected void checkInputs(Scanner in) {
 		try {
 			if (in.hasNextLine()) {
@@ -51,6 +64,8 @@ public class CLI {
 		String value = pos == -1 ? null : cmd.substring(pos+1);
 		if (isMatch(key, "help", 1))
 			help();
+		if (isMatch(key, "get-map", 1))
+			viewNicktable();
 		if (isMatch(key, "send", 1) && value != null)
 			send(value);
 		if (isMatch(key, "map", 1) && value != null)
@@ -79,7 +94,14 @@ public class CLI {
 		System.out.println("CLI: send nick/ip msg");
 		System.out.println("CLI: ping-ip ip");
 		System.out.println("CLI: ping-nick nick");
+		System.out.println("CLI: get-map");
 		System.out.println("CLI: quit");
+	}
+	
+	protected void viewNicktable() {
+		for (String s : mgr.getMap()) {
+			System.out.println("Mapped: "+s);
+		}
 	}
 	
 	protected void pingIP(String ip) {
@@ -91,7 +113,7 @@ public class CLI {
 	}
 	
 	protected void pingNick(String nick) {
-		String ip = mgr.getMapping(nick);
+		String ip = mgr.getIpByNick(nick);
 		if (ip == null) {
 			System.out.println(nick + " is not mapped");
 		} else if (mgr.checkAlive(ip)) {
@@ -107,7 +129,7 @@ public class CLI {
 			return; // no empty mappings
 		String id = s.substring(0, pos);
 		String ip = s.substring(pos+1);
-		System.out.println("DEBUG: CLI: mapping "+id+":"+ip);
+		EventDispatch.get().debug("CLI: mapping "+id+":"+ip);
 		mgr.mapNick(id, ip);
 	}
 	
@@ -117,7 +139,7 @@ public class CLI {
 			return; // no empty strings from cli
 		String id = s.substring(0, pos);
 		String msg = s.substring(pos+1);
-		System.out.println("DEBUG: CLI: sending \""+msg+"\" to "+id);
+		EventDispatch.get().debug("CLI: sending \""+msg+"\" to "+id);
 		mgr.send(id, MessageFormat.createMessagePacket("märt", msg));
 	}
 	

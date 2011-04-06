@@ -23,10 +23,12 @@ public class SocketManager {
 		connections = new Vector<Socket>();
 		try {
 			ssoc = new ServerSocket(SocketManager.PORT);
-			System.out.println("SocketManager: opened ServerSocket on "+
+			EventDispatch.get().debug(
+					"SocketManager: opened ServerSocket on "+
 					"*:"+SocketManager.PORT);
 		} catch (Exception e) {
-			System.out.println("SocketManager: failed to create ServerSocket: "+
+			EventDispatch.get().debug(
+					"SocketManager: failed to create ServerSocket: "+
 					e.getMessage());
 		}
 		new Thread(new Runnable() {
@@ -99,7 +101,7 @@ public class SocketManager {
 		try {
 			ip = InetAddress.getByName(addr).getHostAddress();
 		} catch (UnknownHostException e) {
-			System.out.println("WARNING: failed to resolve: "+addr);
+			EventDispatch.get().debug("WARNING: failed to resolve: "+addr);
 			return null;
 		}
 		// look for open sockets
@@ -113,7 +115,7 @@ public class SocketManager {
 			}
 		}
 		if (allowNewConnection) {
-			System.out.println("Trying to connect to "+addr);
+			EventDispatch.get().debug("Trying to connect to "+addr);
 			return makeConnection(ip, SocketManager.PORT);
 		} else {
 			return null;
@@ -123,11 +125,11 @@ public class SocketManager {
 	protected Socket makeConnection(String addr, int port) {
 		try {
 			Socket soc = new Socket(addr, SocketManager.PORT);
-			System.out.println("DEBUG: established connection to "+addr);
+			EventDispatch.get().debug("established connection to "+addr);
 			addSocket(soc);
 			return soc;
 		} catch (Exception e) {
-			System.out.println("ERROR: failed to connect to "+
+			EventDispatch.get().debug("ERROR: failed to connect to "+
 					addr+": "+e.getMessage());
 			return null;
 		}
@@ -143,13 +145,13 @@ public class SocketManager {
 		while (!ssoc.isClosed()) {
 			try {
 				Socket soc = ssoc.accept();
-				System.out.println("SocketManager: connection from "+
+				EventDispatch.get().debug("SocketManager: connection from "+
 						soc.getInetAddress().getHostAddress()+
 						":"+soc.getPort());
 				Socket old = getSocketByAddr(
 						soc.getInetAddress().getHostAddress(), false); 
 				if (old != null) {
-					System.out.println("SocketManager: "+
+					EventDispatch.get().debug("SocketManager: "+
 							"replacing old "+old.getRemoteSocketAddress()+
 							" with new "+soc.getRemoteSocketAddress());
 					closeSocket(old);
@@ -158,7 +160,7 @@ public class SocketManager {
 					connections.add(soc);
 				}
 			} catch (Exception e) {
-				System.out.println("SocketManager: "+
+				EventDispatch.get().debug("SocketManager: "+
 						"failed to accept connection: "+e.getMessage());
 			}
 		}

@@ -42,13 +42,13 @@ public class MessageFormat {
 		try {
 			r = readBytes(in, buf, len, timeout);
 			if (r < len) {
-				System.out.println(String.format(
+				EventDispatch.get().debug(String.format(
 						"WARNING: MessageFormat: readBlock/%s failed: "+
 						"timeout (read %d/%d in %d", display, r, len, timeout));
 				return null;
 			}
 		} catch (Exception e) {
-			System.out.println(String.format(
+			EventDispatch.get().debug(String.format(
 					"WARNING: MessageFormat: readBlock/%s failed: "+
 					"exception occurred: %s", e.getMessage()));
 			return null;
@@ -99,11 +99,11 @@ public class MessageFormat {
 				if(dissectStreamAlive(soc, in, mgr))
 					return true;
 			default: 
-				System.out.println("DEBUG: MessageFormat: dissectStream: "+
+				EventDispatch.get().debug("MessageFormat: dissectStream: "+
 						"EOF or invalid type byte: "+type);
 			}
 		} catch (Exception e) {
-			System.out.println("DEBUG: MessageFormat: dissectStream: "+
+			EventDispatch.get().debug("MessageFormat: dissectStream: "+
 					"could not read type byte: "+e.getMessage());
 		}
 		return false;
@@ -112,7 +112,7 @@ public class MessageFormat {
 	protected static boolean dissectStreamAlive(
 			Socket soc, InputStream in, ConnectionManager mgr) 
 	{
-		System.out.println("DEBUG: MessageFormat: dissecting new alive "+
+		EventDispatch.get().debug("MessageFormat: dissecting new alive "+
 				"from "+soc.getRemoteSocketAddress());
 		byte[] buf = MessageFormat.readBlock(in, 3, 300, "zero3");
 		if (buf == null)
@@ -121,8 +121,9 @@ public class MessageFormat {
 		if (Arrays.equals(buf, ZERO3)) {
 			return true;
 		} else {
-			System.out.println(String.format("WARNING: MessageFormat: "+
-					"zero3 = {%x,%x,%x}", buf[0], buf[1], buf[2]));
+			EventDispatch.get().debug(String.format(
+					"WARNING: MessageFormat: zero3 = {%x,%x,%x}", 
+					buf[0], buf[1], buf[2]));
 			return false;
 		}
 	}
@@ -130,7 +131,7 @@ public class MessageFormat {
 	protected static boolean dissectStreamMessage(
 			Socket soc, InputStream in, ConnectionManager mgr) 
 	{
-		System.out.println("DEBUG: MessageFormat: dissecting new message "+
+		EventDispatch.get().debug("MessageFormat: dissecting new message "+
 				"from "+soc.getRemoteSocketAddress());
 		byte[] buf = null;
 		byte[] nickBytes = null;
@@ -173,10 +174,10 @@ public class MessageFormat {
 			// map nick
 			mgr.mapNick(nick, soc.getInetAddress().getHostAddress());
 			// announce message
-			mgr.messageReceived(nick, msg);
+			EventDispatch.get().message(nick, msg);
 			return true;
 		} else {
-			System.out.println(String.format("MessageFormat: error: "+
+			EventDispatch.get().debug(String.format("MessageFormat: error: "+
 					"zero3 = {%x,%x,%x}", buf[0], buf[1], buf[2]));
 			return false;
 		}
