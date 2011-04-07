@@ -1,14 +1,13 @@
 package mbakhoff;
-import java.awt.*;
-import java.awt.event.*;
-
 import javax.swing.*;
-
-import java.util.Vector;
+import java.awt.event.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Gui implements MEventListener {
 
 	private ConnectionManager mgr = null;
+	private Map<String,GuiTab> tabMap = new HashMap<String,GuiTab>(); 
 	
 	private JFrame frame = null;
 	private JTabbedPane pane = null;
@@ -25,36 +24,89 @@ public class Gui implements MEventListener {
 	public Gui(ConnectionManager mgr) {
 		this.mgr = mgr;
 		EventDispatch.get().addListener(this);
+		// init
+		initComponents();
+		// focus on textfield
+		tfNick.requestFocus();
+	}
+			
+	public void connectionRequestEvent() {
+		String nick = tfNick.getText();
+		String addr = tfAddr.getText();
+		tfNick.setText("");
+		tfAddr.setText("");
+		EventDispatch.get().debug("gui connectionReq: "+nick+":"+addr);
+		mgr.mapNick(nick, addr);
+		// refocus
+		tfNick.requestFocus();
+	}
+
+	// MEventListener
+	public void messageReceived(String nick, String message) {
+		log.append(nick+" says: "+message+"\n");
+		GuiTab tab = tabMap.get(nick);
+		if (tab == null) {
+			tab = addTab(nick);
+		}
+		tab.messageReceived(message);
+	}
+
+	// MEventListener
+	public void messageDebug(String message) {
+		log.append("DEBUG: "+message+"\n");
+	}
+
+	// MEventListener
+	public void peeringEvent() {
+		mdl.clear();
+		for (String s : mgr.getMap()) {
+			mdl.addElement(s);
+		}
+	}
+	
+	protected GuiTab addTab(String nick) {
+		GuiTab t = new GuiTab(mgr, nick);
+		pane.add(nick, t);
+		tabMap.put(nick, t);
+		return t;
+	}
+	
+	protected void peerSelected(String peer) {
+		EventDispatch.get().debug("gui selected peer: "+peer);
+		GuiTab tab = tabMap.get(peer);
+		if (tab == null) {
+			tab = addTab(peer);
+		}
+		pane.setSelectedComponent(tab);
+	}
+	
+	protected void initComponents() {
 		// frame
 		frame = new JFrame("oop-messenger");
 		pane = new JTabbedPane();
 		// control panel
 		ctl = new JPanel();
-		buildPeerView(ctl);
+		peerviewInit(ctl);
+		peerviewLayout(ctl);
 		pane.addTab("Peers", ctl);
 		// frame layout
 		frame.add(pane);
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
-		// focus on textfield
-		tfNick.requestFocus();
 	}
 	
-	protected void buildPeerView(JPanel p) {
+	protected void peerviewInit(JPanel p) {
 		// log textarea
 		log = new JTextArea("");
 		log.setColumns(60);
 		log.setRows(30);
 		log.setEditable(false);
-		log.setBorder(BorderFactory.createTitledBorder("Log"));
 		// list + model
 		mdl = new DefaultListModel();
-		peeringEvent();
 		list = new JList(mdl);
 		//list.setCellRenderer(new MyCellRenderer());
 		list.setFixedCellWidth(150);
-		list.setBorder(BorderFactory.createTitledBorder("Peers"));
 		list.addKeyListener(new KeyListener() {
 			public void keyTyped(KeyEvent e) {}
 			public void keyReleased(KeyEvent e) {}
@@ -74,9 +126,6 @@ public class Gui implements MEventListener {
 				}
 			}
 		});
-		// encapsulate JList in viewport
-		JViewport list_view = new JViewport();
-		list_view.add(list);
 		tfNick = new JTextField();
 		tfNick.setColumns(8);
 		tfNick.setToolTipText("Insert nickname");
@@ -94,7 +143,16 @@ public class Gui implements MEventListener {
 				connectionRequestEvent();
 			}
 		});
-		// create layout
+	}
+	
+	protected void peerviewLayout(JPanel p) {
+		// enable JList, JTextArea scrolling
+		JScrollPane listWrapper = new JScrollPane();
+		listWrapper.setViewportView(list);
+		listWrapper.setBorder(BorderFactory.createTitledBorder("Peers"));
+		JScrollPane logWrapper = new JScrollPane();
+		logWrapper.setViewportView(log);
+		logWrapper.setBorder(BorderFactory.createTitledBorder("Log"));
 		// haha edu desifeerimisel
 		GroupLayout gl = new GroupLayout(p);
 		p.setLayout(gl);
@@ -104,57 +162,23 @@ public class Gui implements MEventListener {
 		gl.setHorizontalGroup(
 				gl.createSequentialGroup()
 					.addGroup(gl.createParallelGroup()
-							.addComponent(list_view)
+							.addComponent(listWrapper)
 							.addGroup(gl.createSequentialGroup()
 									.addComponent(tfNick)
 									.addComponent(tfAddr)
 									.addComponent(bAdd)))
-					.addComponent(log));
+					.addComponent(logWrapper));
 		gl.setVerticalGroup(
 				gl.createParallelGroup()
 					.addGroup(gl.createSequentialGroup()
-							.addComponent(list_view)
+							.addComponent(listWrapper)
 							.addGroup(gl.createParallelGroup()
 									.addComponent(tfNick)
 									.addComponent(tfAddr)
 									.addComponent(bAdd)))
-					.addComponent(log));
-	}
-	
-	public void connectionRequestEvent() {
-		String nick = tfNick.getText();
-		String addr = tfAddr.getText();
-		tfNick.setText("");
-		tfAddr.setText("");
-		EventDispatch.get().debug("gui connectionReq: "+nick+":"+addr);
-		mgr.mapNick(nick, addr);
-		// refocus
-		tfNick.requestFocus();
-	}
-	
-	public void peerSelected(String peer) {
-		EventDispatch.get().debug("gui selected peer: "+peer);
+					.addComponent(logWrapper));
 	}
 
-	// MEventListener
-	public void messageReceived(String nick, String message) {
-		log.append(nick+" says: "+message+"\n");
-	}
-
-	// MEventListener
-	public void messageDebug(String message) {
-		log.append("DEBUG: "+message+"\n");
-	}
-
-	// MEventListener
-	public void peeringEvent() {
-		Vector<String> map = mgr.getMap();
-		mdl.clear();
-		for (String s : map) {
-			mdl.addElement(s);
-		}
-		mdl.addElement("");
-	}
 	
 	/*
 	private class MyCellRenderer implements ListCellRenderer {
