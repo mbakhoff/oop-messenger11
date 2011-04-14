@@ -171,7 +171,9 @@ public class ConnectionManager {
 	}
 	
 	public boolean checkAlive(String addr) {
-		return sendToIP(addr, MessageFormat.createAliveMessage());
+		boolean ok = sendToIP(addr, MessageFormat.createAliveMessage());
+		EventDispatch.get().debug("pinging "+addr+": "+(ok?"UP":"DOWN"));
+		return ok;
 	}
 	
 }
