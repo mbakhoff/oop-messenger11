@@ -1,5 +1,6 @@
 package mbakhoff;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
 import java.util.HashMap;
@@ -65,10 +66,17 @@ public class Gui implements MEventListener {
 	}
 	
 	protected GuiTab addTab(String nick) {
-		GuiTab t = new GuiTab(mgr, nick);
+		GuiTab t = new GuiTab(mgr, this, nick);
 		pane.add(nick, t);
+		pane.setTabComponentAt(pane.indexOfComponent(t), createTabComponent(t));
 		tabMap.put(nick, t);
 		return t;
+	}
+	
+	protected void removeTab(GuiTab tab) {
+		EventDispatch.get().debug("gui: removing tab for "+tab.getNick());
+		tabMap.remove(tab.getNick());
+		pane.remove(tab);
 	}
 	
 	protected void peerSelected(String peer) {
@@ -152,6 +160,8 @@ public class Gui implements MEventListener {
 		listWrapper.setBorder(BorderFactory.createTitledBorder("Peers"));
 		JScrollPane logWrapper = new JScrollPane();
 		logWrapper.setViewportView(log);
+		logWrapper.setHorizontalScrollBarPolicy(
+				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		logWrapper.setBorder(BorderFactory.createTitledBorder("Log"));
 		// haha edu desifeerimisel
 		GroupLayout gl = new GroupLayout(p);
@@ -178,26 +188,26 @@ public class Gui implements MEventListener {
 									.addComponent(bAdd)))
 					.addComponent(logWrapper));
 	}
-
 	
-	/*
-	private class MyCellRenderer implements ListCellRenderer {
-
-		public Component getListCellRendererComponent(JList list, Object value,
-				int index, boolean isSelected, boolean cellHasFocus) {
-			JLabel item = new JLabel();
-			if (value != null && value.toString().length() > 0) {
-				item.setText((String)value);
-			} else {
-				item.setText(" ");
-			}
-			if (isSelected) {
-				item.setBackground(Color.lightGray);
-			}
-			return item;
-		}
-		
+	protected static Icon getCloseIcon() {
+		return new ImageIcon("stock-close.png");
 	}
-	*/
+	
+	protected Component createTabComponent(final GuiTab tab) {
+		JPanel root = new JPanel(new BorderLayout(1,0));
+		root.setOpaque(false);
+		JButton closeButton = new JButton(getCloseIcon());
+		closeButton.setContentAreaFilled(false);
+		closeButton.setMargin(new Insets(1,-1,-1,-1));
+		closeButton.setBorderPainted(false);
+		closeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				removeTab(tab);
+			}
+		});
+		root.add(new JLabel(tab.getNick()), BorderLayout.WEST);
+		root.add(closeButton, BorderLayout.EAST);
+		return root;
+	}
 		
 }

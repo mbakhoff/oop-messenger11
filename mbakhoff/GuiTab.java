@@ -1,28 +1,37 @@
 package mbakhoff;
 import javax.swing.*;
-
 import java.awt.event.*;
 
 public class GuiTab extends JPanel {
 
 	protected ConnectionManager mgr = null;
+	protected Gui gui = null;
 	protected String nick = null;
 	
 	protected JTextArea log = null;
 	protected JTextField input = null;
 	protected JButton sendButton = null;
 	
-	public GuiTab(ConnectionManager mgr, String nick) {
+	public GuiTab(ConnectionManager mgr, Gui gui, String nick) {
 		this.nick = nick;
 		this.mgr = mgr;
+		this.gui = gui;
 		initComponents();
 		doTabLayout();
+	}
+
+	protected void removeSelf() {
+		gui.removeTab(this);
 	}
 	
 	public void messageReceived(String msg) {
 		synchronized (log) {
 			log.append(nick+": "+msg+"\n");
 		}
+	}
+	
+	public String getNick() {
+		return nick;
 	}
 	
 	protected void initComponents() {
@@ -34,6 +43,7 @@ public class GuiTab extends JPanel {
 		log = new JTextArea("");
 		log.setRows(20);
 		log.setColumns(60);
+		log.setEditable(false);
 		input = new JTextField();
 		input.setColumns(60);
 		input.addActionListener(sendAction);
