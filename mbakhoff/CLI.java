@@ -3,33 +3,34 @@ package mbakhoff;
 import java.util.Scanner;
 
 public class CLI implements MEventListener {
+	
+	public static void main(String[] args) {
+		ConnectionManager mgr = new ConnectionManager();
+		new CLI(mgr, true);
+		mgr.mainLoop();
+	}
 
 	protected ConnectionManager mgr = null;
 	protected boolean active = true;
 	
-	public static void main(String[] args) {
-		ConnectionManager mgr = new ConnectionManager();
-		new CLI(mgr);
-		new Gui(mgr);
-		mgr.mainLoop();
-	}
-	
-	public CLI(ConnectionManager mgr) {
+	public CLI(ConnectionManager mgr, boolean interactive) {
 		this.mgr = mgr;
-		EventDispatch.get().addListener(this);
-		help();
-		new Thread(new Runnable() {
-			public void run() {
-				Scanner in = new Scanner(System.in);
-				while (active) {
-					try {
-						checkInputs(in);
-						Thread.sleep(50);
-					} catch (Exception e) {
+		if (interactive) {
+			EventDispatch.get().addListener(this);
+			help();
+			new Thread(new Runnable() {
+				public void run() {
+					Scanner in = new Scanner(System.in);
+					while (active) {
+						try {
+							checkInputs(in);
+							Thread.sleep(50);
+						} catch (Exception e) {
+						}
 					}
 				}
-			}
-		}).start();
+			}).start();
+		}
 	}
 	
 	public void stop() {
@@ -42,6 +43,10 @@ public class CLI implements MEventListener {
 
 	public void messageDebug(String message) {
 		System.out.println("DEBUG: "+message);
+	}
+	
+	public void messageConsole(String msg) {
+		System.out.println(msg);
 	}
 	
 	public void peeringEvent() {
@@ -90,36 +95,36 @@ public class CLI implements MEventListener {
 	}
 	
 	protected void help() {
-		System.out.println("CLI: map nick ip");
-		System.out.println("CLI: send nick/ip msg");
-		System.out.println("CLI: ping-ip ip");
-		System.out.println("CLI: ping-nick nick");
-		System.out.println("CLI: get-map");
-		System.out.println("CLI: quit");
+		EventDispatch.get().console("CLI: map nick ip");
+		EventDispatch.get().console("CLI: send nick/ip msg");
+		EventDispatch.get().console("CLI: ping-ip ip");
+		EventDispatch.get().console("CLI: ping-nick nick");
+		EventDispatch.get().console("CLI: get-map");
+		EventDispatch.get().console("CLI: quit");
 	}
 	
 	protected void viewNicktable() {
 		for (String s : mgr.getMap()) {
-			System.out.println("Mapped: "+s);
+			EventDispatch.get().console("Mapped: "+s);
 		}
 	}
 	
 	protected void pingIP(String ip) {
 		if (mgr.checkAlive(ip)) {
-			System.out.println(ip + " is UP");
+			EventDispatch.get().console(ip + " is UP");
 		} else {
-			System.out.println(ip + " is DOWN");
+			EventDispatch.get().console(ip + " is DOWN");
 		}
 	}
 	
 	protected void pingNick(String nick) {
 		String ip = mgr.getIpByNick(nick);
 		if (ip == null) {
-			System.out.println(nick + " is not mapped");
+			EventDispatch.get().console(nick + " is not mapped");
 		} else if (mgr.checkAlive(ip)) {
-			System.out.println(ip + " is UP");
+			EventDispatch.get().console(ip + " is UP");
 		} else {
-			System.out.println(ip + " is DOWN");
+			EventDispatch.get().console(ip + " is DOWN");
 		}
 	}
 	

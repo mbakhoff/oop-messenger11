@@ -6,9 +6,16 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class Gui implements MEventListener {
+	
+	public static void main(String[] args) {
+		ConnectionManager mgr = new ConnectionManager();
+		new Gui(mgr);
+		mgr.mainLoop();
+	}
 
 	private ConnectionManager mgr = null;
-	private Map<String,GuiTab> tabMap = new HashMap<String,GuiTab>(); 
+	private Map<String,GuiTab> tabMap = new HashMap<String,GuiTab>();
+	private CLI dummyConsole = null;
 	
 	private JFrame frame = null;
 	private JTabbedPane pane = null;
@@ -17,6 +24,7 @@ public class Gui implements MEventListener {
 	// control panel elements
 	private DefaultListModel mdl = null; 
 	private JTextArea log = null;
+	private JTextField tfCmd = null;
 	private JList list = null;
 	private JTextField tfNick = null;
 	private JTextField tfAddr = null;
@@ -55,6 +63,10 @@ public class Gui implements MEventListener {
 	// MEventListener
 	public void messageDebug(String message) {
 		log.append("DEBUG: "+message+"\n");
+	}
+	
+	public void messageConsole(String msg) {
+		log.append(msg+"\n");
 	}
 
 	// MEventListener
@@ -110,6 +122,15 @@ public class Gui implements MEventListener {
 		log.setColumns(60);
 		log.setRows(30);
 		log.setEditable(false);
+		dummyConsole = new CLI(mgr, false);
+		tfCmd = new JTextField();
+		tfCmd.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				 String cmd = tfCmd.getText().trim();
+				 tfCmd.setText("");
+				 dummyConsole.parse(cmd);
+			}			
+		});
 		// list + model
 		mdl = new DefaultListModel();
 		list = new JList(mdl);
@@ -158,11 +179,14 @@ public class Gui implements MEventListener {
 		JScrollPane listWrapper = new JScrollPane();
 		listWrapper.setViewportView(list);
 		listWrapper.setBorder(BorderFactory.createTitledBorder("Peers"));
-		JScrollPane logWrapper = new JScrollPane();
-		logWrapper.setViewportView(log);
-		logWrapper.setHorizontalScrollBarPolicy(
+		JScrollPane scrolledLog = new JScrollPane();
+		scrolledLog.setViewportView(log);
+		scrolledLog.setHorizontalScrollBarPolicy(
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		logWrapper.setBorder(BorderFactory.createTitledBorder("Log"));
+		JPanel logAndConsole = new JPanel(new BorderLayout());
+		logAndConsole.add(scrolledLog, BorderLayout.NORTH);
+		logAndConsole.add(tfCmd, BorderLayout.SOUTH);
+		logAndConsole.setBorder(BorderFactory.createTitledBorder("Console"));
 		// haha edu desifeerimisel
 		GroupLayout gl = new GroupLayout(p);
 		p.setLayout(gl);
@@ -177,7 +201,7 @@ public class Gui implements MEventListener {
 									.addComponent(tfNick)
 									.addComponent(tfAddr)
 									.addComponent(bAdd)))
-					.addComponent(logWrapper));
+					.addComponent(logAndConsole));
 		gl.setVerticalGroup(
 				gl.createParallelGroup()
 					.addGroup(gl.createSequentialGroup()
@@ -186,7 +210,7 @@ public class Gui implements MEventListener {
 									.addComponent(tfNick)
 									.addComponent(tfAddr)
 									.addComponent(bAdd)))
-					.addComponent(logWrapper));
+					.addComponent(logAndConsole));
 	}
 	
 	protected static Icon getCloseIcon() {

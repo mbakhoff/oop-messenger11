@@ -124,7 +124,8 @@ public class SocketManager {
 	
 	protected Socket makeConnection(String addr, int port) {
 		try {
-			Socket soc = new Socket(addr, SocketManager.PORT);
+			Socket soc = new Socket();
+			soc.connect(new InetSocketAddress(addr, SocketManager.PORT), 2000);
 			EventDispatch.get().debug("established connection to "+addr);
 			addSocket(soc);
 			return soc;

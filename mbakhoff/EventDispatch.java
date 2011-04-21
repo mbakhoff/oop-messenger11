@@ -36,6 +36,12 @@ public class EventDispatch {
 		}
 	}
 	
+	public void console(String message) {
+		for (MEventListener l : listeners) {
+			l.messageConsole(message);
+		}
+	}
+	
 	public void mapChanged() {
 		for (MEventListener l : listeners) {
 			l.peeringEvent();
