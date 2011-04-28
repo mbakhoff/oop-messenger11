@@ -49,8 +49,7 @@ public class Send {
         try {
             out = sock.getOutputStream();
             out.write(packet);
-            System.out.println("Packet sent to: " + sock.getInetAddress().toString() + " port: " + sock.getPort()
-            		+ " from: " + sock.getLocalAddress() + " port: " + sock.getLocalPort());
+            System.out.println("debug: done");
         } catch (IOException ex) {
             System.out.println("Failed to send packet: " + ex.getMessage());
         }
