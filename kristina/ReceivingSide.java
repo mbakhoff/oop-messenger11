@@ -2,20 +2,22 @@ package kristina;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.util.Vector;
 import java.io.InputStream;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JOptionPane;
 
 public class ReceivingSide implements Runnable{
 	
-	Vector<Socket> sockets = null;
 	ServerSocket servSock = null;
-	Object lock = null;
+	Session session = null;
 	
-	public ReceivingSide(Vector<Socket> sockets, Object lock) {
-		this.lock = lock;
-		synchronized (this.lock) {
+	public ReceivingSide(Session session) {
+		this.session = session;
+		synchronized (session.lock) {
 			try {
-				this.sockets = sockets;
 				servSock = new ServerSocket(1800);
 				new Thread(this).start();
 			} catch (Exception e) {
@@ -28,16 +30,20 @@ public class ReceivingSide implements Runnable{
 		while (true) {
 			try {
 				Socket newSocket = servSock.accept();
-				synchronized (lock) {
-					for (Socket s : sockets) {
+				synchronized (session.lock) {
+					for (Socket s : session.sockets) {
 						if (s.getInetAddress().getHostAddress().equals( 
 							newSocket.getInetAddress().getHostAddress())) {
 								continue;
 						}
 					}
-					sockets.add(newSocket);
+					session.sockets.add(newSocket);
+					if (session.tabPane.getTitleAt(0).equals("Main")) {
+						session.tabPane.remove(0);
+					}
+					session.tabPane.addTab("ip", new mainPane(session));
 				}
-				System.out.println("Incoming connection from " + 
+				JOptionPane.showMessageDialog(null, "Incoming connection from " + 
 						newSocket.getInetAddress().getHostAddress() + 
 						". Connection established.");
 			} catch (Exception e) {
@@ -46,7 +52,7 @@ public class ReceivingSide implements Runnable{
 		}
 	}
 	
-	public static void incomingMessagesParser(InputStream input) {
+	public static void incomingMessagesParser(InputStream input, JTabbedPane tabbedPane, int tabIndex) {
 		
 		int id;
 		byte[] b_id = new byte[1];
@@ -109,6 +115,9 @@ public class ReceivingSide implements Runnable{
 			}
 			
 			nick = new String(b_nick, "UTF-8");
+			if (tabbedPane.getTitleAt(tabIndex).equals("ip")) {
+				tabbedPane.setTitleAt(tabIndex, nick);
+			}
 			
 			while (true) {
 				if (input.available() >= 4) {
@@ -158,7 +167,11 @@ public class ReceivingSide implements Runnable{
 				}
 			}
 			
-			System.out.println(nick + " says: " + msg);
+			JPanel panel = (JPanel) tabbedPane.getComponentAt(tabIndex);
+			JPanel subPanel = (JPanel) panel.getComponent(1);
+			JTextArea textArea = (JTextArea) ((JScrollPane) subPanel.getComponent(1)).getViewport().getView();
+			textArea.append(nick + ": " + msg + "\n");
+			
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 			}
