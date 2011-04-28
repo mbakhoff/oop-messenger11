@@ -30,7 +30,8 @@ public class Execution {
     protected void getPort() {
 
     }
-// Encodes the message into a packet and sends it to a socket (socket is tied to a nickname) //
+// Encodes the message into a packet and sends it to a socket //
+// (socket is tied to a nickname) //
     protected void sendMessage(String dest, String msg) {
 
     }

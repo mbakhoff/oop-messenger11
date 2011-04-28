@@ -73,8 +73,7 @@ public class ConsoleInterface extends Execution implements Runnable{
                     System.out.println("Correct syntax is: msg <reveicer nickname> <message>");
                 else {
                         String[] tokens = getFirstToken(info);
-                        Send.sendPacket(MessengerMain.s, Send.encodePacket(tokens[1]));
-                        System.out.println("Sending packet to: " + mm.s);
+                        Send.sendPacket(MessengerMain.socketList.get(1), Send.encodePacket(tokens[1]));
                 }
 
             case 4:

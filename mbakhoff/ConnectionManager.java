@@ -1,6 +1,7 @@
 package mbakhoff;
 
 import java.util.HashMap;
+import java.util.Vector;
 import java.net.Socket;
 
 public class ConnectionManager {
@@ -31,7 +32,8 @@ public class ConnectionManager {
 				server.readSockets(this);
 				Thread.sleep(300);
 			} catch (Exception e) {
-				System.out.println("ConnectionManager: "+e.getMessage());
+				EventDispatch.get().debug(
+						"ConnectionManager: "+e.getMessage());
 			}
 		}
 	}
@@ -49,15 +51,16 @@ public class ConnectionManager {
 		synchronized (soc) {
 			try {
 				if (soc.getInputStream().available() > 0) {
-					System.out.println("DEBUG: reading from socket");
+					EventDispatch.get().debug("reading from socket");
 					if (!MessageFormat.dissectStream(soc, this)) {
-						System.out.println("WARNING: read failed; "+
+						EventDispatch.get().debug("WARNING: read failed; "+
 								"killing socket "+soc.getRemoteSocketAddress());
 						ok = false;
 					}
 				}
 			} catch (Exception e) {
-				System.out.println("ERROR: socket died? "+e.getMessage());
+				EventDispatch.get().debug(
+						"ERROR: socket died? "+e.getMessage());
 				ok = false;
 			}
 		}
@@ -82,7 +85,7 @@ public class ConnectionManager {
 				}
 				return true;
 			} catch (Exception e) {
-				System.out.println("ERROR: failed to send to "+
+				EventDispatch.get().debug("ERROR: failed to send to "+
 						soc.getRemoteSocketAddress()+": "+e.getMessage());
 				server.closeSocket(soc);
 				return false;
@@ -122,28 +125,30 @@ public class ConnectionManager {
 		String current = nickMappings.get(nick);
 		// map if not defined
 		if (current == null) {
-			System.out.println("ConnectionManager: "+
+			EventDispatch.get().debug("ConnectionManager: "+
 					"mapNick "+nick+":"+ip);
 			synchronized (nickMappings) {
 				if (server.getSocketByAddr(ip, true) != null)
 					nickMappings.put(nick, ip);
 			}
+			EventDispatch.get().mapChanged();
 		// if defined, check if connection still alive
 		} else if (!current.equals(ip)) {
 			if (checkAlive(current)) {
-				System.out.println("ConnectionManager: "+
+				EventDispatch.get().debug("ConnectionManager: "+
 						"nickname collision: \""+nick+"\": "+
 						"current:"+current+"; new:"+ip);
 			} else {
-				System.out.println("ConnectionManager: "+
+				EventDispatch.get().debug("ConnectionManager: "+
 						"dead nickname mapping: "+nick+":"+current);
-				System.out.println("ConnectionManager: "+
+				EventDispatch.get().debug("ConnectionManager: "+
 						"remapping "+nick+":"+ip);
 				synchronized (nickMappings) {
 					nickMappings.remove(nick);
 					if (server.getSocketByAddr(ip, true) != null)
 						nickMappings.put(nick, ip);
 				}
+				EventDispatch.get().mapChanged();
 			}
 		}
 	}
@@ -152,26 +157,23 @@ public class ConnectionManager {
 		synchronized (nickMappings) {
 			nickMappings.remove(nick);
 		}
+		EventDispatch.get().mapChanged();
 	}
 	
-	public String getMapping(String nick) {
+	public String getIpByNick(String nick) {
 		synchronized (nickMappings) {
 			return nickMappings.get(nick);
 		}
 	}
 	
-	public boolean checkAlive(String addr) {
-		return sendToIP(addr, MessageFormat.createAliveMessage());
+	public Vector<String> getMap() {
+		return new Vector<String>(nickMappings.keySet());
 	}
 	
-	/**
-	 * @brief Event handler for new messages
-	 * @param nick nickname of sender
-	 * @param msg message contents
-	 */
-	public void messageReceived(String nick, String msg) {
-		// TODO: eventlistener arch 
-		System.out.println("MSG: "+nick+" says: "+msg);
+	public boolean checkAlive(String addr) {
+		boolean ok = sendToIP(addr, MessageFormat.createAliveMessage());
+		EventDispatch.get().debug("pinging "+addr+": "+(ok?"UP":"DOWN"));
+		return ok;
 	}
 	
 }
