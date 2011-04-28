@@ -4,7 +4,7 @@ import java.net.*;
 
 /**
  * @brief This class contains methods necessary to execute the will of the user
- * @description Both user interfaces - command line and graphical will inherit
+ * @discription Both user interfaces - command line and graphical will inherit
  * this class and use it to execute commands given by the user
  *
  * @author erik
@@ -30,7 +30,8 @@ public class Execution {
     protected void getPort() {
 
     }
-// Encodes the message into a packet and sends it to a socket (socket is tied to a nickname) //
+// Encodes the message into a packet and sends it to a socket //
+// (socket is tied to a nickname) //
     protected void sendMessage(String dest, String msg) {
 
     }
@@ -42,14 +43,14 @@ public class Execution {
             sock = new Socket(ip, port);
         }
         catch(Exception e) {
-            System.out.println("ERRROOOORRRRR: " + e.getMessage());
+            System.out.println(e.getMessage());
         }
 
-    	MessengerMain.socketList.add(sock);
-    	MessengerMain.nameList.add(sock.getInetAddress().toString());
+    	mm.socketList.add(sock);
+    	mm.nameList.add(sock.getInetAddress().toString());
     }
 
-// Binds IP address to the specified nickname //
+// Binds IP aadress to the specified nickname //
 // Returns whether the operation was a success or not //
     protected void bindIpToNickname(String ip, String nick) {
 
@@ -72,7 +73,7 @@ public class Execution {
     }
 
 
-// Splits on space and get the first value, return rest //
+// Splits on space and get the first value, return rest in original syntax //
     public String[] getFirstToken(String input) {
         String[] tolkens = input.split(" ");
         String[] returnValues = new String[1];

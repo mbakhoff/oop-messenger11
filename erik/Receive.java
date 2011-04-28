@@ -8,19 +8,20 @@ public class Receive implements Runnable {
 
     ServerSocket servSock = null;
     MessengerMain mm;
+    private final Object locked = new Object();
 
     public Receive() {
         try {
-            servSock = new ServerSocket(1800);
+            servSock = new ServerSocket(mm.com_port);
             new Thread(this).start();
-            System.out.println("Listening thread started. Now listening on port: " + MessengerMain.com_port);
+            System.out.println("Listening thread started. Now listening on port: " + mm.com_port);
+            GraphicalInterface.appendText("[KONSOLE] Listening thread started. Now listening on port: " + mm.com_port);
         }
         catch (IOException ex) {
-        	System.out.println("ServerSocket not started:" + ex.getMessage());
         }
     }
 
-// Converts byte array to integer (used to get the length of nickname and message) //
+// Converts byte array to integer //
     private static int byteToInt(byte[] in) {
         return ByteBuffer.wrap(in).getInt();
     }
@@ -58,28 +59,35 @@ public class Receive implements Runnable {
             for(int i=0;i<msgLen;i++) {
                 msgBuf[i] = inBuf[i+9+nickLen];
             }
-                if(inBuf[9+nickLen+msgLen] == 0 && inBuf[10+nickLen+msgLen] == 0 && inBuf[11+nickLen+msgLen] == 0 && 12+nickLen+msgLen == inBuf.length) {
+                if(inBuf[9+nickLen+msgLen] == 0 && inBuf[10+nickLen+msgLen] == 0 && inBuf[11+nickLen+msgLen] == 0 /*&& 12+nickLen+msgLen == inBuf.length*/) {
                     String nick = new String(nickBuf);
                     String msg = new String(msgBuf);
                     System.out.println(nick + " says: " + msg);
+                    GraphicalInterface.appendText(nick + " says: " + msg);
                 }
-                else
+                else {
                     System.out.println("EndBytes not correct");
+                }
         }
         else if(inBuf[0] == 2)
             ;
     }
-// Main loop - listens for incoming connections //
+
     public void run() {
         while(true) {
             try {
                 Socket s = servSock.accept();
                 MessengerMain.socketList.add(s);
-                //System.out.println(MessengerMain.socketList.size());
-                System.out.println("Incoming socket from: " + s.getInetAddress() + " port: " + s.getPort());
+                MessengerMain.nameList.add("usr" + (mm.socketList.size()-1));
+                System.out.println("Incoming socket from: " + s.getInetAddress()
+                + " port: " + s.getPort() + " current nick set to: "
+                + mm.nameList.get(mm.nameList.size()-1));
+                GraphicalInterface.appendText("[KONSOLE] Incoming socket from: " + s.getInetAddress()
+                + " port: " + s.getPort() + " current nick set to: "
+                + mm.nameList.get(mm.nameList.size()-1));
             }
             catch (Exception ex) {
-                System.out.println("Error:" + ex.getMessage());
+                System.out.println("Error accepting incoming socket: " + ex.getMessage());
             }
         }
     }
