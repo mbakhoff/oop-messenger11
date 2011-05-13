@@ -5,6 +5,13 @@ import java.util.Scanner;
 public class CLI implements MEventListener {
 	
 	public static void main(String[] args) {
+		// parse cli args
+		for (String s : args) {
+			if (s.equals("-d")) {
+				EventDispatch.get().setDebugEnabled(true);
+			}
+		}
+		// run
 		ConnectionManager mgr = new ConnectionManager();
 		new CLI(mgr, true);
 		mgr.mainLoop();
@@ -71,6 +78,8 @@ public class CLI implements MEventListener {
 			help();
 		if (isMatch(key, "get-map", 1))
 			viewNicktable();
+		if (isMatch(key, "debug", 1))
+			toggleDebug();
 		if (isMatch(key, "send", 1) && value != null)
 			send(value);
 		if (isMatch(key, "map", 1) && value != null)
@@ -100,6 +109,7 @@ public class CLI implements MEventListener {
 		EventDispatch.get().console("CLI: ping-ip ip");
 		EventDispatch.get().console("CLI: ping-nick nick");
 		EventDispatch.get().console("CLI: get-map");
+		EventDispatch.get().console("CLI: debug");
 		EventDispatch.get().console("CLI: quit");
 	}
 	
@@ -146,6 +156,17 @@ public class CLI implements MEventListener {
 		String msg = s.substring(pos+1);
 		EventDispatch.get().debug("CLI: sending \""+msg+"\" to "+id);
 		mgr.send(id, MessageFormat.createMessagePacket("märt", msg));
+	}
+	
+	protected void toggleDebug() {
+		boolean state = EventDispatch.get().isDebugEnabled();
+		if (state == true) {
+			EventDispatch.get().console("disabling debugging");
+			EventDispatch.get().setDebugEnabled(false);
+		} else {
+			EventDispatch.get().console("enabling debugging");
+			EventDispatch.get().setDebugEnabled(true);
+		}
 	}
 	
 }

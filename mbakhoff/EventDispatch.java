@@ -6,6 +6,7 @@ public class EventDispatch {
 
 	private static EventDispatch inst = null;
 	private LinkedList<MEventListener> listeners = null;
+	private boolean debugEnabled = false;
 	
 	private EventDispatch() {
 		listeners = new LinkedList<MEventListener>();
@@ -31,8 +32,10 @@ public class EventDispatch {
 	}
 	
 	public void debug(String message) {
-		for (MEventListener l : listeners) {
-			l.messageDebug(message);
+		if (debugEnabled) {
+			for (MEventListener l : listeners) {
+				l.messageDebug(message);
+			}
 		}
 	}
 	
@@ -46,6 +49,14 @@ public class EventDispatch {
 		for (MEventListener l : listeners) {
 			l.peeringEvent();
 		}
+	}
+	
+	public synchronized boolean isDebugEnabled() {
+		return debugEnabled;
+	}
+	
+	public synchronized void setDebugEnabled(boolean enabled) {
+		debugEnabled = enabled;
 	}
 	
 }
