@@ -119,8 +119,6 @@ public class Gui implements MEventListener {
 	protected void peerviewInit(JPanel p) {
 		// log textarea
 		log = new JTextArea("");
-		log.setColumns(60);
-		log.setRows(30);
 		log.setEditable(false);
 		dummyConsole = new CLI(mgr, false);
 		tfCmd = new JTextField();
@@ -183,8 +181,9 @@ public class Gui implements MEventListener {
 		scrolledLog.setViewportView(log);
 		scrolledLog.setHorizontalScrollBarPolicy(
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrolledLog.setPreferredSize(new Dimension(600, 400));
 		JPanel logAndConsole = new JPanel(new BorderLayout());
-		logAndConsole.add(scrolledLog, BorderLayout.NORTH);
+		logAndConsole.add(scrolledLog, BorderLayout.CENTER);
 		logAndConsole.add(tfCmd, BorderLayout.SOUTH);
 		logAndConsole.setBorder(BorderFactory.createTitledBorder("Console"));
 		// haha edu desifeerimisel
