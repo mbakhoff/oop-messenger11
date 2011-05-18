@@ -76,8 +76,7 @@ public class GuiTab extends JPanel {
 	protected void sendEvent() {
 		String msg = input.getText();
 		input.setText("");
-		EventDispatch.get().debug("gui: sending to "+nick+": "+msg);
-		mgr.send(nick, MessageFormat.createMessagePacket("märt", msg));
+		mgr.sendMessage("märt", nick, msg);
 		synchronized (log) {
 			log.append("märt: "+msg+"\n");
 		}

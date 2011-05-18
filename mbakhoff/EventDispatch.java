@@ -1,11 +1,12 @@
 package mbakhoff;
-import java.util.LinkedList;
+import java.util.*;
 
 // SINGLETON
 public class EventDispatch {
 
 	private static EventDispatch inst = null;
 	private LinkedList<MEventListener> listeners = null;
+	private boolean debugEnabled = false;
 	
 	private EventDispatch() {
 		listeners = new LinkedList<MEventListener>();
@@ -25,14 +26,17 @@ public class EventDispatch {
 	}
 	
 	public void message(String nick, String message) {
+		MessageLog.get(nick).append(nick, message);
 		for (MEventListener l : listeners) {
 			l.messageReceived(nick, message);
 		}
 	}
 	
 	public void debug(String message) {
-		for (MEventListener l : listeners) {
-			l.messageDebug(message);
+		if (debugEnabled) {
+			for (MEventListener l : listeners) {
+				l.messageDebug(message);
+			}
 		}
 	}
 	
@@ -46,6 +50,14 @@ public class EventDispatch {
 		for (MEventListener l : listeners) {
 			l.peeringEvent();
 		}
+	}
+	
+	public synchronized boolean isDebugEnabled() {
+		return debugEnabled;
+	}
+	
+	public synchronized void setDebugEnabled(boolean enabled) {
+		debugEnabled = enabled;
 	}
 	
 }
