@@ -19,7 +19,8 @@
 		osapool ühendub otse iga teise osapoolega. Ühenduse loomiseks on vaja 
 		ainult protokolliga ühilduvat tarkvara ja teisele osapooltele 
 		kättesaadavat avalikku IP aadressi, millel on avatud port 1800. 
-		Protokoll toimib ka siis, kui kõik osapooled on samas kohtvõrgus. </p>
+		Protokoll toimib ka siis, kui kõik osapooled on samas kohtvõrgus. 
+		Läbi NATi ei toimi. </p>
 		<p>Protokoll võimaldab saata tekstisõnumeid ja määrata osapooltele 
 		hüüdnimesi (nickname). </p>
 		
@@ -54,8 +55,8 @@
 		<h2>Implementatsioonid</h2>
 		
 		<h3>mbakhoff</h3>
-		<img src="mbakhoff-1.png" alt="mbakhoff-screen1" />
-		<img src="mbakhoff-2.png" alt="mbakhoff-screen2" />
+		<img src="mbakhoff-1.png" alt="mbakhoff-screen1" /><br />
+		<img src="mbakhoff-2.png" alt="mbakhoff-screen2" /><br />
 		<img src="mbakhoff-flow.png" alt="mbakhoff-diagramm" />
 		<p><code>
 			javac -encoding utf-8 mbakhoff/* <br />
@@ -63,19 +64,25 @@
 		</code></p>
 		
 		<h3>kristina</h3>
+		<img src="kristina-1.png" alt="kristina-screen1" /><br />
+		<img src="kristina-2.png" alt="kristina-screen2" /><br />
 		<p><code>
 			javac -encoding utf-8 kristina/* <br />
-			java kristina/?
+			java kristina/Session
 		</code></p>
 		
 		<h3>erik</h3>
 		<p><code>
 			javac -encoding utf-8 erik/* <br />
-			java erik/?
+			java erik/MessengerMain
 		</code></p>
 		
 		<h2>Kood</h2>
 		<table>
+			<tr>
+				<td>2011-05-18</td>
+				<td><a href="sources-20110518.tar.gz">download tar.gz</a></td>
+			</tr>
 			<tr>
 				<td>2011-05-16</td>
 				<td><a href="sources-20110516.tar.gz">download tar.gz</a></td>
