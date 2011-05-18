@@ -1,6 +1,5 @@
 package mbakhoff;
-
-import java.util.Scanner;
+import java.util.*;
 
 public class CLI implements MEventListener {
 	
@@ -70,6 +69,7 @@ public class CLI implements MEventListener {
 	}
 	
 	// watch out for duplicate cmd name starts
+	// needs refactor
 	protected void parse(String cmd) {
 		int pos = cmd.indexOf(' ');
 		String key = cmd.substring(0, pos != -1 ? pos : cmd.length());
@@ -84,6 +84,10 @@ public class CLI implements MEventListener {
 			send(value);
 		if (isMatch(key, "map", 1) && value != null)
 			map(value);
+		if (isMatch(key, "unmap", 1) && value != null)
+			unmap(value);
+		if (isMatch(key, "log", 1) && value != null)
+			getLog(value);
 		if (isMatch(key, "ping-nick", 6) && value != null)
 			pingNick(value);
 		if (isMatch(key, "ping-ip", 6) && value != null)
@@ -104,12 +108,15 @@ public class CLI implements MEventListener {
 	}
 	
 	protected void help() {
-		EventDispatch.get().console("CLI: map nick ip");
-		EventDispatch.get().console("CLI: send nick/ip msg");
-		EventDispatch.get().console("CLI: ping-ip ip");
-		EventDispatch.get().console("CLI: ping-nick nick");
+		EventDispatch.get().console("CLI: help");
 		EventDispatch.get().console("CLI: get-map");
 		EventDispatch.get().console("CLI: debug");
+		EventDispatch.get().console("CLI: send nick/ip msg");
+		EventDispatch.get().console("CLI: map nick ip");
+		EventDispatch.get().console("CLI: unmap nick");
+		EventDispatch.get().console("CLI: log nick");
+		EventDispatch.get().console("CLI: ping-nick nick");
+		EventDispatch.get().console("CLI: ping-ip ip");
 		EventDispatch.get().console("CLI: quit");
 	}
 	
@@ -148,14 +155,35 @@ public class CLI implements MEventListener {
 		mgr.mapNick(id, ip);
 	}
 	
+	protected void unmap(String s) {
+		if (mgr.unmapNick(s)) {
+			EventDispatch.get().console("unmapped "+s);
+		} else {
+			EventDispatch.get().console("nickname was not mapped: "+s);
+		}
+	}
+	
+	protected void getLog(String nick) {
+		List<String> log = MessageLog.get(nick).tail(16);
+		if (log.size() < 1) {
+			EventDispatch.get().console("no log available");
+		} else {
+			EventDispatch.get().console(String.format(
+					"conversation with %s (%d): ", 
+					nick, log.size()));
+			for (String x : log) {
+				EventDispatch.get().console(x);
+			}
+		}
+	}
+	
 	protected void send(String s) {
 		int pos = s.indexOf(" ");
 		if (pos == -1)
 			return; // no empty strings from cli
 		String id = s.substring(0, pos);
 		String msg = s.substring(pos+1);
-		EventDispatch.get().debug("CLI: sending \""+msg+"\" to "+id);
-		mgr.send(id, MessageFormat.createMessagePacket("märt", msg));
+		mgr.sendMessage("märt", id, msg);
 	}
 	
 	protected void toggleDebug() {

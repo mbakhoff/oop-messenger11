@@ -1,5 +1,5 @@
 package mbakhoff;
-import java.util.LinkedList;
+import java.util.*;
 
 // SINGLETON
 public class EventDispatch {
@@ -26,6 +26,7 @@ public class EventDispatch {
 	}
 	
 	public void message(String nick, String message) {
+		MessageLog.get(nick).append(nick, message);
 		for (MEventListener l : listeners) {
 			l.messageReceived(nick, message);
 		}

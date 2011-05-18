@@ -78,10 +78,16 @@ public class Gui implements MEventListener {
 	}
 	
 	protected GuiTab addTab(String nick) {
+		// create tab
 		GuiTab t = new GuiTab(mgr, this, nick);
 		pane.add(nick, t);
 		pane.setTabComponentAt(pane.indexOfComponent(t), createTabComponent(t));
 		tabMap.put(nick, t);
+		// get chat log (if any)
+		java.util.List<String> log = MessageLog.get(nick).tail(64);
+		for (String s : log) {
+			t.log.append(s+"\n");
+		}
 		return t;
 	}
 	
