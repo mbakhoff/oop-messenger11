@@ -33,10 +33,21 @@ public class SendButtonPressed implements ActionListener{
 		JPanel entirePane = (JPanel) writingArea1.getParent();
 		JPanel largePanel = (JPanel) entirePane.getComponent(1);
 		JTextArea upperTextArea = (JTextArea) ((JScrollPane) largePanel.getComponent(1)).getViewport().getView();
-		upperTextArea.append("you: " + text + "\n");	// write text from bottom text area to upper text area
+		// write text from bottom text area to upper text area
+		String output = "you: " + text + "\n";
+		upperTextArea.append(" " + output);
 		
 		int index = session.tabPane.indexOfComponent(entirePane);
-		if (!session.tabPane.getTitleAt(index).equals("Main")) {
+		String nickname = session.tabPane.getTitleAt(index);
+		
+		if (!nickname.equals("Main")) {
+			if (nickname.equals("ip")) {
+				session.log.beginning.append(session.log.currentDate() + " " +
+						output);
+			} else {
+				session.log.write(nickname, session.log.currentDate() + " " +
+						output);
+			}
 			byte[] bytes = UserSide.composeMessage(text, session.nickname);
 			Socket s;
 			synchronized (session.lock) {

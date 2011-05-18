@@ -1,5 +1,6 @@
 package kristina;
-import javax.swing.BoxLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -9,21 +10,25 @@ import javax.swing.JTextArea;
 import java.awt.*;
 import javax.swing.border.*;
 
-public class mainPane extends JPanel{
+public class MainPane extends JPanel{
 	
-	public mainPane(Session session) {
+	public MainPane(Session session) {
 		
 		JButton button1 = new JButton("New connection");
+		JButton button2 = new JButton("Show log");
 		JPanel leftPanel = new JPanel();
-		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+		leftPanel.setLayout(new GridLayout(11, 1, 12, 12));
 		leftPanel.add(button1);
+		leftPanel.add(button2);
 		
 		ConnectButtonPressed listener1 = new ConnectButtonPressed(session);
 		button1.addActionListener(listener1);
-		
+		LogButtonPressed listener2 = new LogButtonPressed(session, this);
+		button2.addActionListener(listener2);		
 		JTextArea textBox = new JTextArea();
 //		textBox.setLineWrap(true);
 		textBox.setEditable(false);
+		textBox.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 		JScrollPane box = new JScrollPane(textBox);
 		box.setBorder(new LineBorder(Color.black, 1, true));
 		JPanel messagePanel = new JPanel();
@@ -32,6 +37,7 @@ public class mainPane extends JPanel{
 		messagePanel.add(box, BorderLayout.CENTER);
 		
 		JTextArea writingArea = new JTextArea();
+		writingArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 //		writingArea.setLineWrap(true);
 		JScrollPane write = new JScrollPane(writingArea);
 		write.setBorder(new LineBorder(Color.black, 1, true));

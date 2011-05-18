@@ -8,6 +8,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 
 // ping button
+// same socket can be added multiple times, fix it (in ReceivingSide)
+// pressing Enter in addition to the send button
 
 public class Session {
 	
@@ -15,12 +17,13 @@ public class Session {
 	Vector<Socket> sockets = new Vector<Socket>();
 	JTabbedPane tabPane = new JTabbedPane();
 	Object lock = new Object();
+	Log log = new Log();
 	
 	public Session() {
 		JFrame frame = new JFrame("Messenger");
 		frame.setSize(800,600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainPane fullPanel = new mainPane(this);
+		MainPane fullPanel = new MainPane(this);
 		tabPane.addTab("Main", fullPanel);
 		frame.add(tabPane);
 		frame.setVisible(true);
@@ -44,7 +47,7 @@ public class Session {
 						InputStream input = s.getInputStream();
 						if (input.available() != 0) {
 							int tabIndex = session.sockets.indexOf(s);
-							ReceivingSide.incomingMessagesParser(input, session.tabPane, tabIndex);
+							r.incomingMessagesParser(input, tabIndex);
 						}
 					} catch (Exception e) {
 						System.out.println(e.getMessage());

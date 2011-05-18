@@ -6,7 +6,6 @@ import java.io.InputStream;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JOptionPane;
 
 public class ReceivingSide implements Runnable{
@@ -41,7 +40,7 @@ public class ReceivingSide implements Runnable{
 					if (session.tabPane.getTitleAt(0).equals("Main")) {
 						session.tabPane.remove(0);
 					}
-					session.tabPane.addTab("ip", new mainPane(session));
+					session.tabPane.addTab("ip", new MainPane(session));
 				}
 				JOptionPane.showMessageDialog(null, "Incoming connection from " + 
 						newSocket.getInetAddress().getHostAddress() + 
@@ -52,7 +51,7 @@ public class ReceivingSide implements Runnable{
 		}
 	}
 	
-	public static void incomingMessagesParser(InputStream input, JTabbedPane tabbedPane, int tabIndex) {
+	public void incomingMessagesParser(InputStream input, int tabIndex) {
 		
 		int id;
 		byte[] b_id = new byte[1];
@@ -62,6 +61,11 @@ public class ReceivingSide implements Runnable{
 		int msg_len;
 		byte[] b_msg_len = new byte[4];
 		String msg;
+		
+		JPanel panel = (JPanel) session.tabPane.getComponentAt(tabIndex);
+		JPanel subPanel = (JPanel) panel.getComponent(1);
+		JTextArea textArea = (JTextArea) ((JScrollPane) subPanel.
+				getComponent(1)).getViewport().getView();
 		
 		while (true) {
 			try {
@@ -115,9 +119,6 @@ public class ReceivingSide implements Runnable{
 			}
 			
 			nick = new String(b_nick, "UTF-8");
-			if (tabbedPane.getTitleAt(tabIndex).equals("ip")) {
-				tabbedPane.setTitleAt(tabIndex, nick);
-			}
 			
 			while (true) {
 				if (input.available() >= 4) {
@@ -167,10 +168,17 @@ public class ReceivingSide implements Runnable{
 				}
 			}
 			
-			JPanel panel = (JPanel) tabbedPane.getComponentAt(tabIndex);
-			JPanel subPanel = (JPanel) panel.getComponent(1);
-			JTextArea textArea = (JTextArea) ((JScrollPane) subPanel.getComponent(1)).getViewport().getView();
-			textArea.append(nick + ": " + msg + "\n");
+			String output = nick + ": " + msg + "\n";
+			textArea.append(" " + output);
+			if (session.tabPane.getTitleAt(tabIndex).equals("ip")) {
+				session.tabPane.setTitleAt(tabIndex, nick);
+//				session.log.write(nick, textArea.getText());
+				session.log.write(nick, session.log.beginning.toString() + 
+						session.log.currentDate() + " " + output);
+				session.log.beginning = new StringBuilder();
+			} else {
+				session.log.write(nick, session.log.currentDate() + " " + output);
+			}
 			
 			} catch (Exception e) {
 				System.out.println(e.getMessage());

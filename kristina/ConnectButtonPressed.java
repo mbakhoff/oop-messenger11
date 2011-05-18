@@ -25,7 +25,7 @@ public class ConnectButtonPressed implements ActionListener {
 					if (tabPane.getTitleAt(0).equals("Main")) {
 						tabPane.remove(0);
 					}
-					tabPane.addTab("ip", new mainPane(session));
+					tabPane.addTab("ip", new MainPane(session));
 					JOptionPane.showMessageDialog(null, "Connection established.");
 				} catch (Exception ex) {
 					System.out.println(ex.getMessage());
