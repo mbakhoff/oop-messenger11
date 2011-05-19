@@ -4,7 +4,7 @@ import java.net.*;
 
 /**
  * @brief This class contains methods necessary to execute the will of the user
- * @discription Both user interfaces - command line and graphical will inherit
+ * @description Both user interfaces - command line and graphical will inherit
  * this class and use it to execute commands given by the user
  *
  * @author erik
@@ -33,10 +33,10 @@ public class Execution {
 // Encodes the message into a packet and sends it to a socket //
 // (socket is tied to a nickname) //
     protected void sendMessage(String dest, String msg) {
-
+        Send.sendInput(msg, dest);
     }
 
-// Opens a socket and adds it to the socket ArrayList //
+// Opens a socket and adds it to the socket socketMap //
     protected void openAndAddSocket(String ip, int port) {
         Socket sock = null;
         try {
@@ -46,14 +46,17 @@ public class Execution {
             System.out.println(e.getMessage());
         }
 
-    	mm.socketList.add(sock);
-    	mm.nameList.add(sock.getInetAddress().toString());
+    	MessengerMain.addSocket(ip, sock);
+
+        System.out.println("Socket opened: " + 
+                    MessengerMain.getSocket(ip).getInetAddress().toString());
+        GraphicalInterface.appendText("[KONSOLE] Socket opened: " +
+                    MessengerMain.getSocket(ip).getInetAddress().toString());
     }
 
 // Binds IP aadress to the specified nickname //
-// Returns whether the operation was a success or not //
-    protected void bindIpToNickname(String ip, String nick) {
-
+    protected void bindIpToNick(String ip, String nick) {
+        MessengerMain.replaceIPWithName(ip, nick);
     }
 
 // Clears the promt of old messages //
@@ -69,9 +72,9 @@ public class Execution {
 // System exit method //
     protected void systemExit() {
         System.out.println("System shutting down...");
+        GraphicalInterface.appendText("[KONSOLE] System shutting down...");
         System.exit(0);
     }
-
 
 // Splits on space and get the first value, return rest in original syntax //
     public String[] getFirstToken(String input) {

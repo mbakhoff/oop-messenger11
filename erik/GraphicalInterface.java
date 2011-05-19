@@ -2,13 +2,13 @@ package erik;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.text.DateFormat;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import java.text.DateFormat;
 
-public class GraphicalInterface implements ActionListener {
+public class GraphicalInterface extends Execution implements ActionListener {
 
     private static JFrame frame = new JFrame("Messenger 0.53.35333");
     private Container cont;
@@ -17,11 +17,17 @@ public class GraphicalInterface implements ActionListener {
     private static JPanel info = new JPanel();
     private static JPanel cl = new JPanel();
 
+    private static Map<String, JTextArea> textMap = new HashMap<String, JTextArea>();
+
     private static Vector<String> tabList = new Vector<String>();
     private static JTextArea infoLog = new JTextArea();
     private static JTextField ta = new JTextField();
     private int width = -1;
     private int height = -1;
+
+    private static Calendar cal = Calendar.getInstance();
+    private static DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,
+                                                            DateFormat.MEDIUM);
 
     public GraphicalInterface() {
 
@@ -74,8 +80,8 @@ public class GraphicalInterface implements ActionListener {
 
     public static void callOut() {
         addTab("Console");
-        for(int i=0;i<25;i++)
-        addTab("t" + i);
+        //for(int i=0;i<25;i++)
+        //  addTab("t" + i);
         validation();
     }
 // Adds menubar to the frame //
@@ -97,6 +103,7 @@ public class GraphicalInterface implements ActionListener {
     private static MouseWheelListener mwl = null;
     private static ActionListener al = null;
     private static JButton queue;
+
     private void tabBarInit() {      
         mwl = new MouseWheelListener() {
             int maxtabs;
@@ -221,14 +228,7 @@ public class GraphicalInterface implements ActionListener {
     }
 
     public static void appendText(String input) {
-        Calendar cal = Calendar.getInstance();
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,
-                        DateFormat.MEDIUM);
-
-        infoLog.append(df.format(cal.getTime()));
-        infoLog.append(" - ");
-        infoLog.append(input);
-        infoLog.append("\n");
+        infoLog.append(df.format(cal.getTime()) + " " + input + "\n");
     }
 
 // Adds the input textfield //
@@ -260,10 +260,26 @@ public class GraphicalInterface implements ActionListener {
         }
     }
     
+    private String[] temp = null;
+
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == ta) {
-            Send.sendPacket(MessengerMain.socketList.get(0), Send.encodePacket(ta.getText()));
-            appendText("erik says: " + ta.getText());
+            temp = getFirstToken(ta.getText());
+            if(temp[0].equals("msg")) {
+                temp = getFirstToken(temp[1]);
+                sendMessage(temp[0], temp[1]);
+                appendText("erik says: " + temp[1]);
+            }
+            else if(temp[0].equals("anosock")) {
+                openAndAddSocket(temp[1], MessengerMain.com_port);
+            }
+            else if(temp[0].equals("exit")) {
+                systemExit();
+            }
+
+
+            //Send.sendPacket(MessengerMain.getSocket(name), Send.encodePacket(ta.getText()));
+            
             ta.setForeground(Color.BLUE);
             ta.setText(null);
         }
@@ -271,27 +287,6 @@ public class GraphicalInterface implements ActionListener {
             System.out.println(e.getActionCommand());
         }
 
-    }
-
-    public class dataStore {
-        ArrayList<String> data;
-        ArrayList<String> timestamp;
-        ArrayList<String> direction;
-        public dataStore() {
-           data = new ArrayList<String>();
-           timestamp = new ArrayList<String>();
-           direction = new ArrayList<String>();
-        }
-// Method to save tab logs //
-        public void addData(String input, String time, String sender, String receiver) {
-            timestamp.add("t " + time);
-            data.add("l " + input);
-            direction.add("r " + sender + " -> " + receiver);
-        }
-// Method to save logs to file //
-        public void writeData() {
-
-        }
     }
    /*     public static void main(String[] args) {
         new GraphicalInterface();

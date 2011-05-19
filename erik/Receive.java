@@ -1,21 +1,38 @@
 package erik;
 
+/**
+ * @brief This class contains a thread to monitor incoming connections and
+ * various methods to decode received package and deal with it.
+ * @description ???
+ *
+ * @author erik
+ * @version 0.1
+ */
+
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.util.Calendar;
 
 public class Receive implements Runnable {
 
-    ServerSocket servSock = null;
-    MessengerMain mm;
+    private ServerSocket servSock = null;
     private final Object locked = new Object();
+    private static boolean check = false;
+    private static boolean check2 = false;
+    private static Calendar cal = Calendar.getInstance();
+    private static DateFormat df = DateFormat.getDateTimeInstance(
+                                    DateFormat.SHORT, DateFormat.MEDIUM);
+    private static String time = null;
 
+// Main constructor of the class, starts up monitoring thread //
     public Receive() {
         try {
-            servSock = new ServerSocket(mm.com_port);
+            servSock = new ServerSocket(MessengerMain.com_port);
             new Thread(this).start();
-            System.out.println("Listening thread started. Now listening on port: " + mm.com_port);
-            GraphicalInterface.appendText("[KONSOLE] Listening thread started. Now listening on port: " + mm.com_port);
+            System.out.println("Listening thread started. Now listening on port: " + MessengerMain.com_port);
+            GraphicalInterface.appendText("[KONSOLE] Listening thread started. Now listening on port: " + MessengerMain.com_port);
         }
         catch (IOException ex) {
         }
@@ -25,8 +42,11 @@ public class Receive implements Runnable {
     private static int byteToInt(byte[] in) {
         return ByteBuffer.wrap(in).getInt();
     }
-// Disassembles packet - array syntax: [packet type][nick length][nick][msg length][msg][endbytes] //
-    public static void decodePacket(InputStream in) {
+
+// Disassembles packet - array syntax: //
+// [packet type][nick length][nick][msg length][msg][endbytes] //
+    public static void decodePacket(InputStream in, String ip) {
+
         byte[] inBuf = null;
         int nickLen = -1;
         byte[] nickBuf = null;
@@ -59,32 +79,46 @@ public class Receive implements Runnable {
             for(int i=0;i<msgLen;i++) {
                 msgBuf[i] = inBuf[i+9+nickLen];
             }
-                if(inBuf[9+nickLen+msgLen] == 0 && inBuf[10+nickLen+msgLen] == 0 && inBuf[11+nickLen+msgLen] == 0 /*&& 12+nickLen+msgLen == inBuf.length*/) {
-                    String nick = new String(nickBuf);
-                    String msg = new String(msgBuf);
-                    System.out.println(nick + " says: " + msg);
-                    GraphicalInterface.appendText(nick + " says: " + msg);
-                }
-                else {
-                    System.out.println("EndBytes not correct");
-                }
+            if(inBuf[9+nickLen+msgLen] == 0 && inBuf[10+nickLen+msgLen] == 0 && inBuf[11+nickLen+msgLen] == 0 /*&& 12+nickLen+msgLen == inBuf.length*/) {
+                postResults(new String(msgBuf), new String(nickBuf), ip);
+                //postResults(msgBuf.toString(), nickBuf.toString());
+            }
+            else {
+                System.out.println("EndBytes not correct");
+            }
         }
         else if(inBuf[0] == 2)
             ;
     }
 
+// Prints out results to the screen and sends results to log //
+    private static void postResults(String msg, String sender, String ip) {
+        check = MessengerMain.containsSocketKey(ip);
+        check2 = MessengerMain.containsSocketKey(sender);
+        time = df.format(cal.getTime());
+
+        if (check == true && check2 == false) {
+            MessengerMain.replaceIPWithName(ip, sender);
+        }
+        System.out.println(time + " - " + sender + " says: " + msg);
+        GraphicalInterface.appendText(sender + " says: " + msg);
+        MessengerMain.getDataStore(sender).writeData(
+                    msg, time, sender, MessengerMain.nick);
+    }
+
+// Starts monitoring thread //
     public void run() {
         while(true) {
             try {
                 Socket s = servSock.accept();
-                MessengerMain.socketList.add(s);
-                MessengerMain.nameList.add("usr" + (mm.socketList.size()-1));
+                MessengerMain.addSocket(s.getInetAddress().toString(), s);
                 System.out.println("Incoming socket from: " + s.getInetAddress()
                 + " port: " + s.getPort() + " current nick set to: "
-                + mm.nameList.get(mm.nameList.size()-1));
-                GraphicalInterface.appendText("[KONSOLE] Incoming socket from: " + s.getInetAddress()
+                + s.getInetAddress().toString());
+                GraphicalInterface.appendText("[KONSOLE] Incoming socket from: "
+                                              + s.getInetAddress()
                 + " port: " + s.getPort() + " current nick set to: "
-                + mm.nameList.get(mm.nameList.size()-1));
+                + s.getInetAddress().toString());
             }
             catch (Exception ex) {
                 System.out.println("Error accepting incoming socket: " + ex.getMessage());
