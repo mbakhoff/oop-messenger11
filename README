@@ -14,3 +14,7 @@ ALIVE:
 1 byte, value 2, sõnumi tüüp
 3 byte, value {0,0,0}, lõpu kontrollbaidid
 
+teha:
+logid
+friendlisti salvestamine
+suhtlemise graaf?

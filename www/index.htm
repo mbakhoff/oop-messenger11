@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>oop-messenger11</title>
+		<meta charset="utf-8" />
+		<style>
+			p { max-width: 75%; }
+			tr:nth-of-type(odd) { background-color: #eee; }
+			td { padding: 3px 10px 3px 3px; }
+		</style>
+	</head>
+	<body>
+		
+		<h1>oop-messenger11</h1>
+		
+		<h2>Projekti kirjeldus</h2>
+		<p>Oop-messenger11 on sõnumivahetusprotokoll (midagi msni sarnast), mis 
+		toimib p2p põhimõttel - messengeril ei ole keskset serverit, iga 
+		osapool ühendub otse iga teise osapoolega. Ühenduse loomiseks on vaja 
+		ainult protokolliga ühilduvat tarkvara ja teisele osapooltele 
+		kättesaadavat avalikku IP aadressi, millel on avatud port 1800. 
+		Protokoll toimib ka siis, kui kõik osapooled on samas kohtvõrgus. 
+		Läbi NATi ei toimi. </p>
+		<p>Protokoll võimaldab saata tekstisõnumeid ja määrata osapooltele 
+		hüüdnimesi (nickname). </p>
+		
+		<h2>Protokolli spec</h2>
+		<p>Kasutatakse TCP ühendust, kuulatakse pordil 1800. Teksti kodeering 
+		on UTF-8. Numbrilised väärtused on märgiga (signed). </p>
+		
+		<h3>Message</h3>
+		<p>Põhiline pakett. Sisaldab sõnumi saatja nime ja sõnumi sisu. </p>
+		<ol>
+			<li>sõnumi tüüp. 1 bait, väärtus 1 </li>
+			<li>
+				nickname pikkus baitides. 4 baiti, väärtus vastab nickname 
+				utf-8 kodeeritud pikkusele 
+			</li>
+			<li>nickname baidid, pikkus määratud eelmises väljas</li>
+			<li>
+				sõnumi pikkus baitides. 4 baiti, väärtus vastab sõnumi utf-8 
+				kodeeritud pikkusele
+			<li>sõnumi baidid, pikkus määratud eelmises väljas</li>
+			<li>kontrollbaidid. 3 baiti väärtusega 0, 0, 0 </li>
+		</ol>
+		
+		<h3>Hello</h3>
+		<p>Abipakett. Selle võib saata igal ajal ja vastuvõttev osapool võib 
+		seda ignoreerida. Eesmärk: surnud TCP ühenduste avastamine. </p>
+		<ol>
+			<li>sõnumi tüüp. 1 bait, väärtus 2 </li>
+			<li>kontrollbaidid. 3 baiti väärtusega 0, 0, 0 </li>
+		</ol>
+		
+		<h2>Implementatsioonid</h2>
+		
+		<h3>mbakhoff</h3>
+		<img src="mbakhoff-1.png" alt="mbakhoff-screen1" /><br />
+		<img src="mbakhoff-2.png" alt="mbakhoff-screen2" /><br />
+		<img src="mbakhoff-flow.png" alt="mbakhoff-diagramm" />
+		<p><code>
+			javac -encoding utf-8 mbakhoff/* <br />
+			java mbakhoff/Gui
+		</code></p>
+		
+		<h3>kristina</h3>
+		<img src="kristina-1.png" alt="kristina-screen1" /><br />
+		<img src="kristina-2.png" alt="kristina-screen2" /><br />
+		<p><code>
+			javac -encoding utf-8 kristina/* <br />
+			java kristina/Session
+		</code></p>
+		
+		<h3>erik</h3>
+		<p><code>
+			javac -encoding utf-8 erik/* <br />
+			java erik/MessengerMain
+		</code></p>
+		
+		<h2>Kood</h2>
+		<table>
+			<tr>
+				<td>2011-05-18</td>
+				<td><a href="sources-20110518.tar.gz">download tar.gz</a></td>
+			</tr>
+			<tr>
+				<td>2011-05-16</td>
+				<td><a href="sources-20110516.tar.gz">download tar.gz</a></td>
+			</tr>
+		</table>
+		
+		<h2>Autorid</h2>
+		<ul>
+			<li>Erik Ilbis, arvutitehnika</li>
+			<li>Kristina Martšenko, informaatika</li>
+			<li>Märt Bakhoff, infotehnoloogia</li>
+		</ul>
+		
+		Objektorienteeritud programmeerimine, 2010/11K Tartu Ülikool
+		
+	</body>
+</html>

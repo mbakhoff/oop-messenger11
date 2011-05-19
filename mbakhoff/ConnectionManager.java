@@ -1,5 +1,4 @@
 package mbakhoff;
-
 import java.util.HashMap;
 import java.util.Vector;
 import java.net.Socket;
@@ -75,7 +74,7 @@ public class ConnectionManager {
 	 * @param pkt byte[] created by MessageFormat.create*()
 	 * @return true on success, else false
 	 */
-	public boolean sendToIP(String addr, byte[] pkt) {
+	private boolean sendToIP(String addr, byte[] pkt) {
 		Socket soc = server.getSocketByAddr(addr, true);
 		if (soc != null) {
 			try {
@@ -101,7 +100,7 @@ public class ConnectionManager {
 	 * @param pkt byte[] created by MessageFormat.create*()
 	 * @return true on success, else false
 	 */
-	public boolean send(String id, byte[] pkt) {
+	private boolean send(String id, byte[] pkt) {
 		String addr = nickMappings.get(id);
 		if (addr == null) {
 			return sendToIP(id, pkt);
@@ -111,6 +110,14 @@ public class ConnectionManager {
 				unmapNick(id);
 			return ret;
 		}
+	}
+	
+	public boolean sendMessage(String myNick, String peer, String msg) {
+		EventDispatch.get().debug(String.format(
+				"sending to %s: %s", 
+				peer, msg));
+		MessageLog.get(peer).append(myNick, msg);
+		return send(peer, MessageFormat.createMessagePacket(myNick, msg));
 	}
 	
 	// TODO: collisions?
@@ -153,11 +160,20 @@ public class ConnectionManager {
 		}
 	}
 	
-	public void unmapNick(String nick) {
+	public boolean unmapNick(String nick) {
+		boolean wasSet = false;
 		synchronized (nickMappings) {
-			nickMappings.remove(nick);
+			if (nickMappings.get(nick) != null) {
+				nickMappings.remove(nick);
+				wasSet = true;
+			}
 		}
-		EventDispatch.get().mapChanged();
+		if (wasSet) {
+			EventDispatch.get().mapChanged();
+			return true;
+		} else {
+			return false;			
+		}
 	}
 	
 	public String getIpByNick(String nick) {
