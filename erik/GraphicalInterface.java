@@ -259,19 +259,29 @@ public class GraphicalInterface extends Execution implements ActionListener {
             }
         }
     }
-    
-    private String[] temp = null;
 
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == ta) {
-            temp = getFirstToken(ta.getText());
+        	String[] temp = getFirstToken(ta.getText());
             if(temp[0].equals("msg")) {
-                temp = getFirstToken(temp[1]);
-                sendMessage(temp[0], temp[1]);
-                appendText("erik says: " + temp[1]);
+            	if (temp.length == 2) {
+            		temp = getFirstToken(temp[1]);
+            		if (temp.length == 2) {
+            			sendMessage(temp[0], temp[1]);
+            			appendText("erik says: " + temp[1]);
+            		} else {
+            			appendText("give msg to send");
+            		}
+            	} else {
+            		appendText("give receiver nick");
+            	}
             }
             else if(temp[0].equals("anosock")) {
-                openAndAddSocket(temp[1], MessengerMain.com_port);
+            	if (temp.length == 2) {
+            		openAndAddSocket(temp[1], MessengerMain.com_port);
+            	} else {
+            		appendText("give destination ip");
+            	}
             }
             else if(temp[0].equals("exit")) {
                 systemExit();

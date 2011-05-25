@@ -77,24 +77,17 @@ public class Execution {
     }
 
 // Splits on space and get the first value, return rest in original syntax //
-    public String[] getFirstToken(String input) {
-        String[] tolkens = input.split(" ");
-        String[] returnValues = new String[1];
-        String[] returnValuesB = new String[2];
-
-        returnValues[0] = tolkens[0];
-        returnValuesB[0] = tolkens[0];
-        returnValuesB[1] = "";
-
-        if (tolkens.length > 1) {
-            for(int i=1; i<tolkens.length; i++) {
-                returnValuesB[1] = returnValuesB[1] + tolkens[i] + " ";
-                returnValuesB[1].trim();
-            }
-            return returnValuesB;
-        }
-        else {
-            return returnValues;
-        }
-    }
+// kammoon
+	public String[] getFirstToken(String input) {
+		input = input.trim();
+		if (input.contains(" ")) {
+			int spos = input.indexOf(" ");
+			return new String[] {
+					input.substring(0, spos),
+					input.substring(spos+1)
+			};
+		} else {
+			return new String[] {input};
+		}
+	}
 }
