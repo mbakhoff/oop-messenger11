@@ -286,7 +286,10 @@ public class GraphicalInterface extends Execution implements ActionListener {
             else if(temp[0].equals("exit")) {
                 systemExit();
             }
-
+            else {
+                appendText("msg <ip> <message>");
+                appendText("anosock <ip>");
+            }
 
             //Send.sendPacket(MessengerMain.getSocket(name), Send.encodePacket(ta.getText()));
             
